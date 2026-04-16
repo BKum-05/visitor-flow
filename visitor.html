@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitor Flow - Visitor Request</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="visitor">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <main class="page landing">
+    <section class="home-auth card visitor-request-shell">
+      <div class="home-auth-copy">
+        <span class="eyebrow">Visitor Request</span>
+        <div class="brand-row">
+          <div class="logo">VF</div>
+          <div>
+            <h1>Visitor Flow</h1>
+            <p class="tiny">No account required</p>
+          </div>
+        </div>
+        <h2>Submit visit details</h2>
+        <p class="muted">Complete the form.<br>The management team will process your request.</p>
+      </div>
+
+      <div class="home-auth-panel">
+        <h3>Visitor Form</h3>
+        <p class="muted">All fields marked with * are required.</p>
+
+        <div id="globalError" class="banner error hidden"></div>
+        <div id="globalSuccess" class="banner success hidden"></div>
+
+        <form id="visitorRequestForm" class="input-grid two visitor-form-grid">
+          <div class="field-stack">
+            <label class="field-label" for="visitorNameInput">Visitor Name</label>
+            <input id="visitorNameInput" placeholder="Full name*" required />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorPhoneInput">Phone</label>
+            <input id="visitorPhoneInput" type="tel" placeholder="Phone number*" required />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorHostInput">Host / Unit</label>
+            <input id="visitorHostInput" placeholder="Host name or unit*" required />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorPurposeInput">Purpose</label>
+            <input id="visitorPurposeInput" placeholder="Purpose of visit*" required />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorDateInput">Expected Date</label>
+            <input id="visitorDateInput" type="date" />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorTimeInput">Expected Time</label>
+            <input id="visitorTimeInput" type="time" />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorIdInput">ID Number</label>
+            <input id="visitorIdInput" placeholder="ID / passport" />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorVehicleInput">Vehicle Number</label>
+            <input id="visitorVehicleInput" placeholder="Vehicle plate" />
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorParkingSlot">Preferred Parking (Optional)</label>
+            <select id="visitorParkingSlot">
+              <option value="">Auto assign</option>
+              <option value="" disabled>Loading slots from Firebase...</option>
+            </select>
+            <p class="field-help">If the preferred slot is unavailable, the next available slot will be auto-assigned.</p>
+          </div>
+          <div class="row stretch" style="grid-column: 1 / -1;">
+            <button id="visitorSubmitBtn" class="btn btn-primary" type="submit">Submit Request</button>
+            <a href="./index.html" class="btn" style="display:inline-grid;place-items:center;">Back</a>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

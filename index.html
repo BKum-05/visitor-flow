@@ -24,14 +24,14 @@
                     <div class="logo">VF</div>
                     <div>
                         <h1>Visitor Flow</h1>
-                        <p class="tiny">Secure, role-based gate operations</p>
+                        <p class="tiny">Secure visitor operations with parking-ready logs</p>
                     </div>
                 </div>
-                <h2>One login, three operational views</h2>
-                <p class="muted">Choose your role to open the right dashboard for check-ins, pre-registration, or administration.</p>
+                <h2>One platform, clear operations</h2>
+                <p class="muted">Use Host or Admin sign-in for staff actions, or continue as Visitor for request submission.</p>
 
                 <div class="home-highlights">
-                    <div class="mini-stat"><strong>Guard</strong><span class="muted">Fast code + manual check-in</span></div>
+                    <div class="mini-stat"><strong>Visitor</strong><span class="muted">Submit request without sign-in</span></div>
                     <div class="mini-stat"><strong>Host</strong><span class="muted">Generate visit codes in seconds</span></div>
                     <div class="mini-stat"><strong>Admin</strong><span class="muted">See summary and export logs</span></div>
                 </div>
@@ -39,13 +39,9 @@
 
             <div class="home-auth-panel">
                 <h3>Sign in to continue</h3>
-                <p class="muted">Select your portal first.</p>
+                <p class="muted">Select Host or Admin portal first.</p>
 
                 <div id="roleGrid" class="role-grid-landing">
-                    <button class="btn nav-link role-pill" data-role="guard" type="button">
-                        <span class="role-icon">🛡️</span>
-                        <span>Guard</span>
-                    </button>
                     <button class="btn nav-link role-pill" data-role="host" type="button">
                         <span class="role-icon">🏠</span>
                         <span>Host</span>
@@ -70,6 +66,9 @@
                     </div>
                     <button id="loginBtn" class="btn btn-primary landing-login-btn">Enter Dashboard</button>
                 </div>
+
+                <a class="landing-link visitor-cta" href="./visitor.html">Proceed as Visitor</a>
+                <p class="field-help">Visitor flow does not require account login.</p>
 
                 <p class="tiny muted">Protected with Firebase Authentication and Firestore role checks.</p>
             </div>

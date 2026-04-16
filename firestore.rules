@@ -10,35 +10,85 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
-    function isAdmin() {
-      return signedIn() && role() == 'admin';
+    function hasUserRole(value) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == value;
     }
 
-    function isGuard() {
-      return signedIn() && (role() == 'guard' || role() == 'admin');
+    function inAdminCollection() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/admin/$(request.auth.uid));
+    }
+
+    function inHostCollection() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/host/$(request.auth.uid));
+    }
+
+    function isManagement() {
+      return signedIn() && (
+        hasUserRole('management') ||
+        hasUserRole('admin') ||
+        hasUserRole('guard') ||
+        inAdminCollection()
+      );
     }
 
     function isHost() {
-      return signedIn() && (role() == 'host' || role() == 'admin');
+      return signedIn() && (
+        hasUserRole('host') ||
+        inHostCollection()
+      );
+    }
+
+    function canOperate() {
+      return isManagement() || isHost();
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
     match /users/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
-      allow create, update, delete: if isAdmin();
+      allow read: if isSelf(uid) || isManagement();
+      allow create, update, delete: if isManagement() || isSelf(uid);
+    }
+
+    // Compatibility collections: existing projects may keep role docs here.
+    match /admin/{uid} {
+      allow read: if isSelf(uid) || isManagement();
+      allow create, update, delete: if isManagement() || isSelf(uid);
+    }
+
+    match /host/{uid} {
+      allow read: if isSelf(uid) || isManagement();
+      allow create, update, delete: if isManagement() || isSelf(uid);
+    }
+
+    match /visitor_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if canOperate();
     }
 
     match /visitor_logs/{visitCode} {
       allow read: if signedIn();
-      allow create: if isGuard();
-      allow update: if isGuard();
-      allow delete: if isAdmin();
+      allow create: if isManagement();
+      allow update: if isManagement();
+      allow delete: if isManagement();
     }
 
     match /preregistrations/{visitCode} {
       allow read: if signedIn();
-      allow create: if isHost();
-      allow update: if isGuard() || isHost();
-      allow delete: if isAdmin();
+      allow create: if canOperate();
+      allow update: if canOperate();
+      allow delete: if isManagement();
+    }
+
+    match /parking_slots/{slotId} {
+      allow read: if true;
+      allow create, update: if canOperate();
+      allow delete: if isManagement();
     }
   }
 }

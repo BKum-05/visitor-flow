@@ -29,7 +29,6 @@
       </header>
 
       <nav class="page-nav card">
-        <a class="nav-link" href="./guard.html">Guard</a>
         <a class="nav-link" href="./host.html">Host</a>
         <a class="nav-link" href="./admin.html">Admin</a>
         <a class="nav-link active" href="./logs.html">Logs</a>
@@ -61,6 +60,7 @@
       <div class="row">
         <button id="refreshBtn" class="btn">Refresh</button>
       </div>
+      <p class="field-help">Use search and sorting to quickly audit visitor activity and parking movement.</p>
 
       <div id="globalError" class="banner error hidden"></div>
       <div id="globalSuccess" class="banner success hidden"></div>
@@ -68,8 +68,16 @@
       <section class="stats" id="statsRow"></section>
 
       <section class="card">
-        <label class="field-label" for="searchInput">Search Logs</label>
-        <div class="row stretch">
+        <label class="field-label" for="searchInput">Search & Sort Logs</label>
+        <div class="row stretch logs-toolbar">
+          <select id="logSortField" class="sort-select" aria-label="Sort logs">
+            <option value="checkedInDesc">Newest first</option>
+            <option value="checkedInAsc">Oldest first</option>
+            <option value="visitorAZ">Visitor A-Z</option>
+            <option value="hostAZ">Host A-Z</option>
+            <option value="statusAZ">Status A-Z</option>
+            <option value="parkingAZ">Parking 1-14</option>
+          </select>
           <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
           <button id="searchBtn" class="btn">Search</button>
         </div>

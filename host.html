@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visitor Flow - Host</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body data-page="host">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
@@ -28,8 +32,7 @@
         </div>
       </header>
 
-      <nav class="page-nav card">        
-        <a class="nav-link" href="./guard.html">Guard</a>
+      <nav class="page-nav card">
         <a class="nav-link active" href="./host.html">Host</a>
         <a class="nav-link" href="./admin.html">Admin</a>
         <a class="nav-link" href="./logs.html">Logs</a>
@@ -49,17 +52,19 @@
           <section class="card hero-side-card">
             <h3>Host advantages</h3>
             <div class="feature-grid">
-              <div class="feature-card"><strong>One code</strong><span class="muted">Give security a simple entry path.</span></div>
-              <div class="feature-card"><strong>Arrival ready</strong><span class="muted">Guests can walk in faster.</span></div>
-              <div class="feature-card"><strong>Cleaner logs</strong><span class="muted">Pre-reg records are easier to track.</span></div>
+              <div class="feature-card"><strong>One code</strong><span class="muted">Give security a simple entry
+                  path.</span></div>
+              <div class="feature-card"><strong>Arrival ready</strong><span class="muted">Guests can walk in
+                  faster.</span></div>
+              <div class="feature-card"><strong>Cleaner logs</strong><span class="muted">Pre-reg records are easier to
+                  track.</span></div>
               <div class="feature-card"><strong>Low effort</strong><span class="muted">Generate and go.</span></div>
             </div>
           </section>
         </aside>
       </section>
 
-      <div id="globalError" class="banner error hidden"></div>
-      <div id="globalSuccess" class="banner success hidden"></div>
+
 
       <section class="stats" id="statsRow"></section>
 
@@ -100,14 +105,31 @@
               <label class="field-label" for="hostVehicle">Vehicle Number</label>
               <input id="hostVehicle" placeholder="Vehicle no" />
             </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostParkingSlot">Preferred Parking (Optional)</label>
+              <select id="hostParkingSlot">
+                <option value="">Auto assign</option>
+                <option value="" disabled>Loading slots from Firebase...</option>
+              </select>
+              <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
+            </div>
           </div>
           <button id="createPreregBtn" class="btn btn-primary">Generate Visit Code</button>
         </article>
 
+
         <article class="card">
           <h3>Visitor Logs</h3>
-          <label class="field-label" for="searchInput">Search Logs</label>
-          <div class="row stretch">
+          <label class="field-label" for="searchInput">Search & Sort Logs</label>
+          <div class="row stretch logs-toolbar">
+            <select id="logSortField" class="sort-select" aria-label="Sort logs">
+              <option value="checkedInDesc">Newest first</option>
+              <option value="checkedInAsc">Oldest first</option>
+              <option value="visitorAZ">Visitor A-Z</option>
+              <option value="hostAZ">Host A-Z</option>
+              <option value="statusAZ">Status A-Z</option>
+              <option value="parkingAZ">Parking 1-14</option>
+            </select>
             <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
             <button id="searchBtn" class="btn">Search</button>
           </div>
@@ -115,6 +137,8 @@
         </article>
       </section>
     </section>
+    <div id="globalError" class="banner error hidden"></div>
+    <div id="globalSuccess" class="banner success hidden"></div>
   </main>
 
   <div id="confirmModal" class="modal hidden" aria-hidden="true">
@@ -129,4 +153,5 @@
   </div>
   <script type="module" src="./app.js"></script>
 </body>
+
 </html>

@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visitor Flow - Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body data-page="admin">
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
@@ -29,7 +33,6 @@
       </header>
 
       <nav class="page-nav card">
-        <a class="nav-link" href="./guard.html">Guard</a>
         <a class="nav-link" href="./host.html">Host</a>
         <a class="nav-link active" href="./admin.html">Admin</a>
         <a class="nav-link" href="./logs.html">Logs</a>
@@ -48,7 +51,7 @@
         <aside class="hero-panel">
           <section class="card hero-side-card">
             <h3>Admin Controls</h3>
-            <p class="muted">Refresh dashboard and export complete CSV records.</p>
+            <p class="muted">Refresh live metrics and export complete CSV records.</p>
             <div class="row hero-actions-row">
               <button id="refreshBtn" class="btn">Refresh</button>
               <button id="exportBtn" class="btn btn-primary">Export CSV</button>
@@ -57,10 +60,59 @@
         </aside>
       </section>
 
-      <div id="globalError" class="banner error hidden"></div>
-      <div id="globalSuccess" class="banner success hidden"></div>
-
       <section class="stats" id="statsRow"></section>
+
+      <section class="grid two">
+        <article class="card" id="managementPanel">
+          <h3>Management Check-In</h3>
+          <p class="muted">Use pre-registration code or manual walk-in fallback.</p>
+          <label class="field-label" for="preregCodeInput">Pre-Registration Code</label>
+          <div class="row stretch">
+            <input id="preregCodeInput" placeholder="Pre-registration code" />
+            <button id="checkInByCodeBtn" class="btn">Check In</button>
+          </div>
+          <div class="input-grid two" id="manualForm">
+            <div class="field-stack">
+              <label class="field-label" for="manualVisitor">Visitor Name</label>
+              <input id="manualVisitor" placeholder="Visitor name*" required />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualHost">Unit Number</label>
+              <input id="manualHost" placeholder="Unit Number*" required />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualPurpose">Purpose</label>
+              <input id="manualPurpose" placeholder="Purpose*" required />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualId">ID Number</label>
+              <input id="manualId" placeholder="ID number" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualPhone">Phone</label>
+              <input id="manualPhone" placeholder="Phone" type="tel" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualVehicle">Vehicle Number</label>
+              <input id="manualVehicle" placeholder="Vehicle no" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualParkingSlot">Preferred Parking (Optional)</label>
+              <select id="manualParkingSlot">
+                <option value="">Auto assign</option>
+                <option value="" disabled>Loading slots from Firebase...</option>
+              </select>
+              <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
+            </div>
+          </div>
+          <button id="manualCheckInBtn" class="btn btn-primary">Manual Check-In</button>
+        </article>
+
+        <article class="card">
+          <h3>Currently Inside</h3>
+          <div id="currentList" class="stack"></div>
+        </article>
+      </section>
 
       <section class="grid two" id="adminInsights">
         <article class="card">
@@ -74,15 +126,36 @@
       </section>
 
       <section class="card">
+        <div class="section-title-row">
+          <div>
+            <h3>Parking Availability</h3>
+            <p class="muted">Edit slot status in real-time from the dashboard.</p>
+          </div>
+          <button id="parkingRefreshBtn" class="btn">Refresh Slots</button>
+        </div>
+        <div id="parkingAdminList" class="stack"></div>
+      </section>
+
+      <section class="card">
         <h3>Visitor Logs</h3>
-        <label class="field-label" for="searchInput">Search Logs</label>
-        <div class="row stretch">
+        <label class="field-label" for="searchInput">Search & Sort Logs</label>
+        <div class="row stretch logs-toolbar">
+          <select id="logSortField" class="sort-select" aria-label="Sort logs">
+            <option value="checkedInDesc">Newest first</option>
+            <option value="checkedInAsc">Oldest first</option>
+            <option value="visitorAZ">Visitor A-Z</option>
+            <option value="hostAZ">Host A-Z</option>
+            <option value="statusAZ">Status A-Z</option>
+            <option value="parkingAZ">Parking 1-14</option>
+          </select>
           <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
           <button id="searchBtn" class="btn">Search</button>
         </div>
         <div id="logsList" class="stack"></div>
       </section>
     </section>
+    <div id="globalError" class="banner error hidden"></div>
+    <div id="globalSuccess" class="banner success hidden"></div>
   </main>
 
   <div id="confirmModal" class="modal hidden" aria-hidden="true">
@@ -97,4 +170,5 @@
   </div>
   <script type="module" src="./app.js"></script>
 </body>
+
 </html>
