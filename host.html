@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitor Flow - Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="host">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <main class="page" id="appRoot">
+    <section id="appShell">
+      <header class="topbar card">
+        <div class="brand-row">
+          <div class="logo">VF</div>
+          <div>
+            <h1>Host Dashboard</h1>
+            <p id="userMeta">-</p>
+          </div>
+        </div>
+        <div class="row">
+          <span id="roleChip" class="chip"></span>
+          <button id="logoutBtn" class="btn">Sign Out</button>
+        </div>
+      </header>
+
+      <nav class="page-nav card">
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./guard.html">Guard</a>
+        <a class="nav-link active" href="./host.html">Host</a>
+        <a class="nav-link" href="./admin.html">Admin</a>
+        <a class="nav-link" href="./logs.html">Logs</a>
+      </nav>
+
+      <section class="hero-grid">
+        <section class="hero-copy card">
+          <span class="eyebrow">Pre-registration</span>
+          <h2>Create a smoother arrival experience</h2>
+          <p class="muted">Generate visit codes before guests arrive and reduce friction at the gate.</p>
+          <div class="hero-kpis">
+            <span>Ready before arrival</span>
+            <span>Faster gate processing</span>
+            <span>Cleaner records</span>
+          </div>
+        </section>
+        <aside class="hero-panel">
+          <section class="card hero-side-card">
+            <h3>Host advantages</h3>
+            <div class="feature-grid">
+              <div class="feature-card"><strong>One code</strong><span class="muted">Give security a simple entry path.</span></div>
+              <div class="feature-card"><strong>Arrival ready</strong><span class="muted">Guests can walk in faster.</span></div>
+              <div class="feature-card"><strong>Cleaner logs</strong><span class="muted">Pre-reg records are easier to track.</span></div>
+              <div class="feature-card"><strong>Low effort</strong><span class="muted">Generate and go.</span></div>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <div id="globalError" class="banner error hidden"></div>
+      <div id="globalSuccess" class="banner success hidden"></div>
+
+      <section class="stats" id="statsRow"></section>
+
+      <section class="grid two">
+        <article class="card" id="hostPanel">
+          <h3>Host Pre-Registration</h3>
+          <p class="muted">Create visitor code before arrival for faster gate processing.</p>
+          <div class="input-grid two" id="hostForm">
+            <div class="field-stack">
+              <label class="field-label" for="hostVisitor">Visitor Name</label>
+              <input id="hostVisitor" placeholder="Visitor name*" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostName">Host Name</label>
+              <input id="hostName" placeholder="Host name*" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostPurpose">Purpose</label>
+              <input id="hostPurpose" placeholder="Purpose*" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostExpectedDate">Expected Date</label>
+              <input id="hostExpectedDate" type="date" aria-label="Expected date" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostExpectedTime">Expected Time</label>
+              <input id="hostExpectedTime" type="time" aria-label="Expected time" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostId">ID Number</label>
+              <input id="hostId" placeholder="ID number" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostPhone">Phone</label>
+              <input id="hostPhone" placeholder="Phone" />
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostVehicle">Vehicle Number</label>
+              <input id="hostVehicle" placeholder="Vehicle no" />
+            </div>
+          </div>
+          <button id="createPreregBtn" class="btn btn-primary">Generate Visit Code</button>
+        </article>
+
+        <article class="card">
+          <h3>Visitor Logs</h3>
+          <label class="field-label" for="searchInput">Search Logs</label>
+          <div class="row stretch">
+            <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
+            <button id="searchBtn" class="btn">Search</button>
+          </div>
+          <div id="logsList" class="stack"></div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <div id="confirmModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <h3 id="modalTitle">Confirm Action</h3>
+      <p id="modalText" class="muted">Are you sure?</p>
+      <div class="row right">
+        <button id="modalCancel" class="btn">Cancel</button>
+        <button id="modalConfirm" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

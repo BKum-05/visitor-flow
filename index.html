@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visitor Flow | Welcome</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=Sora:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body data-page="home">
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+
+    <main class="page landing">
+        <section id="authCard" class="home-auth card">
+            <div class="home-auth-copy">
+                <span class="eyebrow">Campus Visitor Control</span>
+                <div class="brand-row">
+                    <div class="logo">VF</div>
+                    <div>
+                        <h1>Visitor Flow</h1>
+                        <p class="tiny">Secure, role-based gate operations</p>
+                    </div>
+                </div>
+                <h2>One login, three operational views</h2>
+                <p class="muted">Choose your role to open the right dashboard for check-ins, pre-registration, or administration.</p>
+
+                <div class="home-highlights">
+                    <div class="mini-stat"><strong>Guard</strong><span class="muted">Fast code + manual check-in</span></div>
+                    <div class="mini-stat"><strong>Host</strong><span class="muted">Generate visit codes in seconds</span></div>
+                    <div class="mini-stat"><strong>Admin</strong><span class="muted">See summary and export logs</span></div>
+                </div>
+            </div>
+
+            <div class="home-auth-panel">
+                <h3>Sign in to continue</h3>
+                <p class="muted">Select your portal first.</p>
+
+                <div id="roleGrid" class="role-grid-landing">
+                    <button class="btn nav-link role-pill" data-role="guard" type="button">
+                        <span class="role-icon">🛡️</span>
+                        <span>Guard</span>
+                    </button>
+                    <button class="btn nav-link role-pill" data-role="host" type="button">
+                        <span class="role-icon">🏠</span>
+                        <span>Host</span>
+                    </button>
+                    <button class="btn nav-link role-pill" data-role="admin" type="button">
+                        <span class="role-icon">⚙️</span>
+                        <span>Admin</span>
+                    </button>
+                </div>
+
+                <div id="loginForm" class="stack landing-auth-form">
+                    <div id="authError" class="banner error hidden"></div>
+                    <div class="input-grid one">
+                        <div class="field-stack">
+                            <label class="field-label" for="emailInput">Email Address</label>
+                            <input type="email" id="emailInput" placeholder="Email Address">
+                        </div>
+                        <div class="field-stack">
+                            <label class="field-label" for="passwordInput">Password</label>
+                            <input type="password" id="passwordInput" placeholder="Password">
+                        </div>
+                    </div>
+                    <button id="loginBtn" class="btn btn-primary landing-login-btn">Enter Dashboard</button>
+                </div>
+
+                <p class="tiny muted">Protected with Firebase Authentication and Firestore role checks.</p>
+            </div>
+        </section>
+
+        <section id="appShell" class="hidden home-loading">
+            <div class="logo">VF</div>
+            <h2>Authorizing...</h2>
+            <p class="muted">Preparing your workspace</p>
+        </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>

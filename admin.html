@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitor Flow - Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="admin">
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+  <main class="page" id="appRoot">
+    <section id="appShell">
+      <header class="topbar card">
+        <div class="brand-row">
+          <div class="logo">VF</div>
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p id="userMeta">-</p>
+          </div>
+        </div>
+        <div class="row">
+          <span id="roleChip" class="chip"></span>
+          <button id="logoutBtn" class="btn">Sign Out</button>
+        </div>
+      </header>
+
+      <nav class="page-nav card">
+        <a class="nav-link" href="./index.html">Home</a>
+        <a class="nav-link" href="./guard.html">Guard</a>
+        <a class="nav-link" href="./host.html">Host</a>
+        <a class="nav-link active" href="./admin.html">Admin</a>
+        <a class="nav-link" href="./logs.html">Logs</a>
+      </nav>
+
+      <section class="hero-grid">
+        <section class="hero-copy card">
+          <span class="eyebrow">Administration</span>
+          <h2>Reports, summary, and record control</h2>
+          <p class="muted">Review usage patterns, audit records, and export clean reports for stakeholders.</p>
+          <div class="hero-kpis">
+            <span>Operational summary</span>
+            <span>Host activity insights</span>
+            <span>CSV export ready</span>
+          </div>
+        </section>
+        <aside class="hero-panel">
+          <section class="card hero-side-card">
+            <h3>Admin Controls</h3>
+            <p class="muted">Refresh dashboard metrics and export complete CSV records.</p>
+            <div class="row hero-actions-row">
+              <button id="refreshBtn" class="btn">Refresh</button>
+              <button id="exportBtn" class="btn btn-primary">Export CSV</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <div id="globalError" class="banner error hidden"></div>
+      <div id="globalSuccess" class="banner success hidden"></div>
+
+      <section class="stats" id="statsRow"></section>
+
+      <section class="grid two" id="adminInsights">
+        <article class="card">
+          <h3>Summary</h3>
+          <div id="summaryBox" class="summary-grid"></div>
+        </article>
+        <article class="card">
+          <h3>Top Hosts</h3>
+          <div id="topHosts" class="stack"></div>
+        </article>
+      </section>
+
+      <section class="card">
+        <h3>Visitor Logs</h3>
+        <label class="field-label" for="searchInput">Search Logs</label>
+        <div class="row stretch">
+          <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
+          <button id="searchBtn" class="btn">Search</button>
+        </div>
+        <div id="logsList" class="stack"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="confirmModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <h3 id="modalTitle">Confirm Action</h3>
+      <p id="modalText" class="muted">Are you sure?</p>
+      <div class="row right">
+        <button id="modalCancel" class="btn">Cancel</button>
+        <button id="modalConfirm" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
