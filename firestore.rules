@@ -46,6 +46,57 @@ service cloud.firestore {
       return isManagement() || isHost();
     }
 
+    function isHostOwnLog() {
+      return isHost()
+        && (
+          (
+            resource.data.hostOwnerUid is string
+            && resource.data.hostOwnerUid == request.auth.uid
+          )
+          || (
+            !(resource.data.hostOwnerUid is string)
+            && resource.data.checkedInBy is string
+            && resource.data.checkedInBy == request.auth.uid
+          )
+        );
+    }
+
+    function validVisitorRequestCreate() {
+      return request.resource.data.keys().hasOnly([
+        'inviteCode',
+        'visitorName',
+        'hostName',
+        'purpose',
+        'phone',
+        'expectedDate',
+        'expectedClock',
+        'expectedTime',
+        'idNumber',
+        'vehicleNo',
+        'parkingRequested',
+        'preferredParkingSlot',
+        'status',
+        'source',
+        'createdAt',
+        'bookingTimestamp'
+      ])
+      && request.resource.data.visitorName is string
+      && request.resource.data.hostName is string
+      && request.resource.data.purpose is string
+      && request.resource.data.vehicleNo is string
+      && request.resource.data.parkingRequested is bool
+      && request.resource.data.status == 'pending'
+      && request.resource.data.source == 'public'
+      && request.resource.data.visitorName.size() > 1
+      && request.resource.data.visitorName.size() <= 80
+      && request.resource.data.hostName.size() > 0
+      && request.resource.data.hostName.size() <= 80
+      && request.resource.data.purpose.size() > 0
+      && request.resource.data.purpose.size() <= 40
+      && request.resource.data.vehicleNo.size() > 0
+      && request.resource.data.vehicleNo.size() <= 20;
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) || isManagement();
       allow create, update, delete: if isSelf(uid) || isManagement();
@@ -62,12 +113,12 @@ service cloud.firestore {
     }
 
     match /visitor_requests/{requestId} {
-      allow create: if true;
+      allow create: if validVisitorRequestCreate();
       allow read, update, delete: if canOperate();
     }
 
     match /visitor_logs/{visitCode} {
-      allow read: if signedIn();
+      allow read: if isManagement() || isHostOwnLog();
       allow create, update, delete: if isManagement();
     }
 

@@ -127,15 +127,23 @@ function setupUiObservers() {
 
   uiMutationObserver = new MutationObserver((records) => {
     records.forEach((record) => {
-      record.addedNodes.forEach((added) => {
-        if (!(added instanceof Element)) return;
-        observeRevealTargets(added);
-      });
+      if (record.type === "childList") {
+        record.addedNodes.forEach((added) => {
+          if (!(added instanceof Element)) return;
+          observeRevealTargets(added);
+        });
+      }
+
+      if (record.type === "attributes" && record.target instanceof Element) {
+        observeRevealTargets(record.target);
+      }
     });
   });
 
   uiMutationObserver.observe(document.body, {
     childList: true,
+    attributes: true,
+    attributeFilter: ["class"],
     subtree: true
   });
 }
@@ -381,6 +389,7 @@ function wireEvents() {
     showHostRegisterBtn.onclick = () => {
       toggle(get("hostRegisterPrompt"), false);
       toggle(get("hostRegisterForm"), true);
+      syncHomeAuthDividers();
     };
   }
 
@@ -389,8 +398,11 @@ function wireEvents() {
     cancelHostRegisterBtn.onclick = () => {
       toggle(get("hostRegisterForm"), false);
       toggle(get("hostRegisterPrompt"), true);
+      syncHomeAuthDividers();
     };
   }
+
+  syncHomeAuthDividers();
 
   const passwordInput = get("passwordInput");
   if (passwordInput) {
@@ -532,7 +544,8 @@ function wireEvents() {
   }
 
   document.addEventListener("keydown", (event) => {
-    if (!ui.logsList || !ui.logsPagination) return;
+    if (!isLogsPagingContextActive()) return;
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = event.target;
     const isTyping = target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
     if (isTyping) return;
@@ -541,11 +554,13 @@ function wireEvents() {
     const totalPages = Math.max(1, Math.ceil(list.length / LOGS_PAGE_SIZE));
 
     if (event.key === "ArrowLeft" && logsPageIndex > 0) {
+      event.preventDefault();
       logsPageIndex -= 1;
       renderLogs(list);
     }
 
     if (event.key === "ArrowRight" && logsPageIndex < totalPages - 1) {
+      event.preventDefault();
       logsPageIndex += 1;
       renderLogs(list);
     }
@@ -603,6 +618,29 @@ function wireEvents() {
       if (event.target === ui.confirmModal) closeConfirm();
     });
   }
+}
+
+function isLogsPagingContextActive() {
+  if (!ui.logsList || !ui.logsPagination) return false;
+  if (ui.confirmModal && !ui.confirmModal.classList.contains("hidden")) return false;
+
+  const rect = ui.logsPagination.getBoundingClientRect();
+  const inViewport = rect.top < window.innerHeight && rect.bottom > 0;
+  return inViewport;
+}
+
+function syncHomeAuthDividers() {
+  const dividerA = get("authDividerA");
+  const dividerB = get("authDividerB");
+  const prompt = get("hostRegisterPrompt");
+  const form = get("hostRegisterForm");
+  if (!dividerA || !dividerB || !prompt || !form) return;
+
+  const showingPrompt = !prompt.classList.contains("hidden");
+  const showingForm = !form.classList.contains("hidden");
+
+  toggle(dividerA, showingPrompt || showingForm);
+  toggle(dividerB, showingPrompt || showingForm);
 }
 
 function wireInputAutoFormatters() {
@@ -810,9 +848,39 @@ async function saveParkingSlotStatus(slotId, status) {
 }
 
 async function loadLogs() {
-  const logsQuery = query(collection(db, "visitor_logs"), orderBy("checkedInAt", "desc"), limit(200));
+  const baseRef = collection(db, "visitor_logs");
+  if (currentRole === "host") {
+    const uid = currentUser?.uid || "";
+    const [ownedSnap, legacySnap] = await Promise.all([
+      getDocs(query(baseRef, where("hostOwnerUid", "==", uid), orderBy("checkedInAt", "desc"), limit(200))),
+      getDocs(query(baseRef, where("checkedInBy", "==", uid), orderBy("checkedInAt", "desc"), limit(200)))
+    ]);
+
+    const merged = new Map();
+    [...ownedSnap.docs, ...legacySnap.docs].forEach((entry) => {
+      merged.set(entry.id, { id: entry.id, ...entry.data() });
+    });
+
+    logsCache = Array.from(merged.values())
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
+      .slice(0, 200);
+    return;
+  }
+
+  const logsQuery = query(baseRef, orderBy("checkedInAt", "desc"), limit(200));
   const snapshot = await getDocs(logsQuery);
   logsCache = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+}
+
+async function resolveHostOwnerUidByUnit(unitOrHostName) {
+  const unit = String(unitOrHostName || "").trim();
+  if (!unit) return "";
+
+  const snapshot = await getDocs(
+    query(collection(db, "host"), where("unitNumber", "==", unit), limit(1))
+  );
+
+  return snapshot.docs[0]?.id || "";
 }
 
 async function loadPreregistrations() {
@@ -852,6 +920,7 @@ async function reconcileCheckedInPreregToLogs() {
         visitCode,
         visitorName: prereg.visitorName || "",
         hostName: prereg.hostName || "",
+        hostOwnerUid: prereg.hostOwnerUid || "",
         purpose: prereg.purpose || "",
         idNumber: prereg.idNumber || "",
         phone: prereg.phone || "",
@@ -879,6 +948,7 @@ async function reconcileCheckedInPreregToLogs() {
       if (prereg.parkingSlotId && current.parkingStatus !== "occupied") updates.parkingStatus = "occupied";
       if (!current.parkingSlotId && prereg.parkingSlotId) updates.parkingSlotId = prereg.parkingSlotId;
       if (!current.parkingSlotLabel && prereg.parkingSlotLabel) updates.parkingSlotLabel = prereg.parkingSlotLabel;
+      if (!current.hostOwnerUid && prereg.hostOwnerUid) updates.hostOwnerUid = prereg.hostOwnerUid;
       if (Object.keys(updates).length) {
         await updateDoc(logRef, updates);
       }
@@ -968,6 +1038,7 @@ async function approveVisitorRequest(requestId, button) {
     }
 
     const visitCode = await generateUniqueVisitCode();
+    const hostOwnerUid = await resolveHostOwnerUidByUnit(requestData.hostName || "");
     const parking = requestData.parkingRequested
       ? await allocateAvailableParking(visitCode, "occupied", requestData.preferredParkingSlot || "")
       : { slotId: "", slotLabel: "" };
@@ -978,6 +1049,7 @@ async function approveVisitorRequest(requestId, button) {
       visitCode,
       visitorName: formatNameWords(requestData.visitorName || ""),
       hostName: requestData.hostName || "",
+      hostOwnerUid,
       purpose: normalizeVisitPurpose(requestData.purpose || "") || "guest",
       expectedTime: requestData.expectedTime || [requestData.expectedDate, requestData.expectedClock].filter(Boolean).join(" "),
       expectedDate: requestData.expectedDate || "",
@@ -1007,6 +1079,7 @@ async function approveVisitorRequest(requestId, button) {
       visitCode,
       visitorName: formatNameWords(requestData.visitorName || ""),
       hostName: requestData.hostName || "",
+      hostOwnerUid,
       purpose: normalizeVisitPurpose(requestData.purpose || "") || "guest",
       idNumber: requestData.idNumber || "",
       phone: requestData.phone || "",
@@ -1351,6 +1424,7 @@ async function checkInByCode() {
       visitCode,
       visitorName: prereg.visitorName || "",
       hostName: prereg.hostName || "",
+      hostOwnerUid: prereg.hostOwnerUid || "",
       purpose: prereg.purpose || "",
       idNumber: prereg.idNumber || "",
       phone: prereg.phone || "",
@@ -1419,6 +1493,7 @@ async function manualCheckIn() {
   setButtonLoading(button, true, "Checking In...");
   try {
     const visitCode = await generateUniqueVisitCode();
+    const hostOwnerUid = await resolveHostOwnerUidByUnit(hostName);
     const parking = parkingRequested
       ? await allocateAvailableParking(visitCode, "occupied", preferredParkingSlot)
       : { slotId: "", slotLabel: "" };
@@ -1426,6 +1501,7 @@ async function manualCheckIn() {
       visitCode,
       visitorName,
       hostName,
+      hostOwnerUid,
       purpose,
       idNumber,
       phone,
@@ -1498,6 +1574,7 @@ async function createPreregistration() {
       visitCode,
       visitorName,
       hostName,
+      hostOwnerUid: currentRole === "host" ? (currentUser?.uid || "") : "",
       purpose,
       expectedTime,
       expectedDate,
@@ -2373,7 +2450,9 @@ function randomCode() {
 }
 
 function toggle(element, visible) {
-  if (element) element.classList.toggle("hidden", !visible);
+  if (!element) return;
+  element.classList.toggle("hidden", !visible);
+  if (visible) observeRevealTargets(element);
 }
 
 bootstrap();
