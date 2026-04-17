@@ -1458,7 +1458,7 @@ async function checkInByCode() {
     await refreshData();
   } catch (error) {
     console.error(error);
-    showGlobalError("Unable to check in by code.");
+    showGlobalError(`Unable to check in by code. ${friendlyFirestoreError(error)}`);
   } finally {
     setButtonLoading(button, false);
   }
@@ -1527,7 +1527,7 @@ async function manualCheckIn() {
     await refreshData();
   } catch (error) {
     console.error(error);
-    showGlobalError("Unable to complete manual check-in.");
+    showGlobalError(`Unable to complete manual check-in. ${friendlyFirestoreError(error)}`);
   } finally {
     setButtonLoading(button, false);
   }
@@ -1999,6 +1999,9 @@ function showBanner(target, message, isError) {
   }
 
   if (message) {
+    if (isError) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     hideBannerTimer = setTimeout(() => {
       target.textContent = "";
       toggle(target, false);

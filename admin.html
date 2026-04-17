@@ -69,7 +69,7 @@
           <label class="field-label" for="preregCodeInput">Pre-Registration Code</label>
           <div class="row stretch">
             <input id="preregCodeInput" placeholder="Pre-registration code" />
-            <button id="checkInByCodeBtn" class="btn">Check In</button>
+            <button id="checkInByCodeBtn" class="btn" type="button">Check In</button>
           </div>
           <div class="input-grid two" id="manualForm">
             <div class="field-stack">
@@ -118,7 +118,7 @@
               <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
             </div>
           </div>
-          <button id="manualCheckInBtn" class="btn btn-primary">Manual Check-In</button>
+          <button id="manualCheckInBtn" class="btn btn-primary" type="button">Manual Check-In</button>
         </article>
 
         <article class="card" id="pendingRequestsCard">
@@ -126,7 +126,10 @@
           <p class="muted">Review public visitor submissions and approve or reject directly.</p>
           <div id="pendingRequestsList" class="stack"></div>
         </article>
+        <div id="globalError" class="banner error hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
+        <div id="globalSuccess" class="banner success hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       </section>
+
 
       <section class="grid two">
         <article class="card">
@@ -177,8 +180,7 @@
         <div id="logsPagination" class="logs-pagination"></div>
       </section>
     </section>
-    <div id="globalError" class="banner error hidden"></div>
-    <div id="globalSuccess" class="banner success hidden"></div>
+
   </main>
 
   <div id="confirmModal" class="modal hidden" aria-hidden="true">
