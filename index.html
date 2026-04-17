@@ -7,7 +7,8 @@
     <title>Visitor Flow | Welcome</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=Sora:wght@400;600;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
 </head>
@@ -19,7 +20,7 @@
     <main class="page landing">
         <section id="authCard" class="home-auth card">
             <div class="home-auth-copy">
-                <span class="eyebrow">Campus Visitor Control</span>
+                <span class="eyebrow">Visitor Control</span>
                 <div class="brand-row">
                     <div class="logo">VF</div>
                     <div>
@@ -27,34 +28,38 @@
                         <p class="tiny">Secure visitor operations with parking-ready logs</p>
                     </div>
                 </div>
-                <h2>One platform, clear operations</h2>
-                <p class="muted">Use Host or Admin sign-in for staff actions, or continue as Visitor for request submission.</p>
+                <h2>One platform, <br>clear operations</h2>
+                <p class="muted">Use Host or Admin sign-in for staff actions.<br>Or continue as Visitor for request
+                    submission.</p>
 
                 <div class="home-highlights">
-                    <div class="mini-stat"><strong>Visitor</strong><span class="muted">Submit request without sign-in</span></div>
-                    <div class="mini-stat"><strong>Host</strong><span class="muted">Generate visit codes in seconds</span></div>
-                    <div class="mini-stat"><strong>Admin</strong><span class="muted">See summary and export logs</span></div>
+                    <div class="mini-stat"><strong>Visitor</strong> <span class="muted">Submit request without
+                            sign-in</span></div>
+                    <div class="mini-stat"><strong>Host</strong> <span class="muted">Generate visit codes in
+                            seconds</span></div>
+                    <div class="mini-stat"><strong>Admin</strong> <span class="muted">See summary and export logs</span>
+                    </div>
                 </div>
             </div>
 
             <div class="home-auth-panel">
                 <div class="auth-panel-head">
                     <h3>Sign in to continue</h3>
-                    <p class="muted">Select your staff portal, then enter credentials.</p>
+                    <p class="muted">Select your portal, then enter credentials.</p>
                 </div>
 
                 <div class="auth-section">
                     <p class="section-kicker">Choose Portal</p>
-                <div id="roleGrid" class="role-grid-landing">
-                    <button class="btn nav-link role-pill" data-role="host" type="button">
-                        <span class="role-icon">🏠</span>
-                        <span>Host</span>
-                    </button>
-                    <button class="btn nav-link role-pill" data-role="admin" type="button">
-                        <span class="role-icon">⚙️</span>
-                        <span>Admin</span>
-                    </button>
-                </div>
+                    <div id="roleGrid" class="role-grid-landing">
+                        <button class="btn nav-link role-pill" data-role="host" type="button">
+                            <span class="role-icon">🏠</span>
+                            <span>Host</span>
+                        </button>
+                        <button class="btn nav-link role-pill" data-role="admin" type="button">
+                            <span class="role-icon">⚙️</span>
+                            <span>Admin</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="loginForm" class="stack landing-auth-form">
@@ -82,7 +87,7 @@
 
                 <div class="stack landing-auth-form hidden" id="hostRegisterForm">
                     <h3>Register Host Account</h3>
-                    <p class="muted">Create a host account with your profile so pre-registration auto-fills your unit number.</p>
+                    <p class="muted">Create a host account with your profile.</p>
                     <div class="input-grid one">
                         <div class="field-stack">
                             <label class="field-label" for="registerNameInput">Full Name *</label>
@@ -111,9 +116,12 @@
                     </div>
                 </div>
 
-                <a class="landing-link visitor-cta" href="./visitor.html">Proceed as Visitor</a>
-                <p class="field-help">Visitor flow does not require account login.</p>
+                <div class="auth-divider" aria-hidden="true"><span>or</span></div>
 
+                <div class="stack landing-auth-form">
+                    <a class="landing-link btn" href="./visitor.html">Proceed as Visitor</a>
+                    <p class="field-help">Visitor flow does not require account login.</p>
+                </div>
                 <p class="tiny muted">Protected with Firebase Authentication and Firestore role checks.</p>
             </div>
         </section>

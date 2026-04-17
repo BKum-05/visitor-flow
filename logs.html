@@ -6,7 +6,7 @@
   <title>Visitor Flow - Logs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body data-page="logs">
@@ -48,10 +48,10 @@
           <section class="card hero-side-card">
             <h3>Log focus</h3>
             <div class="feature-grid">
-              <div class="feature-card"><strong>Search</strong><span class="muted">Find records by visitor or host.</span></div>
-              <div class="feature-card"><strong>Status</strong><span class="muted">See who is in and out.</span></div>
-              <div class="feature-card"><strong>Timing</strong><span class="muted">Track check-in and checkout time.</span></div>
-              <div class="feature-card"><strong>Review</strong><span class="muted">Keep records clean and usable.</span></div>
+              <div class="feature-card"><strong>Search</strong><br><span class="muted">Find records by visitor or host.</span></div>
+              <div class="feature-card"><strong>Status</strong><br><span class="muted">See who is in and out.</span></div>
+              <div class="feature-card"><strong>Timing</strong><br><span class="muted">Track check-in and checkout time.</span></div>
+              <div class="feature-card"><strong>Review</strong><br><span class="muted">Keep records clean and usable.</span></div>
             </div>
           </section>
         </aside>
@@ -60,7 +60,7 @@
       <div class="row">
         <button id="refreshBtn" class="btn">Refresh</button>
       </div>
-      <p class="field-help">Use search and sorting to quickly audit visitor activity and parking movement.</p>
+      <p class="field-help">Results are paged 10 per screen. Use Prev/Next buttons or keyboard Left/Right arrows to move through records.</p>
 
       <div id="globalError" class="banner error hidden"></div>
       <div id="globalSuccess" class="banner success hidden"></div>
@@ -81,7 +81,9 @@
           <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
           <button id="searchBtn" class="btn">Search</button>
         </div>
+        <p class="field-help">Tip: Try vehicle plate, host name, or visit code. Search and sort apply across all pages of results.</p>
         <div id="logsList" class="stack"></div>
+        <div id="logsPagination" class="logs-pagination"></div>
       </section>
     </section>
   </main>

@@ -6,7 +6,7 @@
   <title>Visitor Flow - Visitor Request</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body data-page="visitor">
@@ -39,7 +39,7 @@
           <div class="field-stack host-invite-field" style="grid-column: 1 / -1;">
             <label class="field-label" for="visitorInviteCodeInput">Host Invitation Code</label>
             <input id="visitorInviteCodeInput" placeholder="Enter host invitation code (optional)" />
-            <p class="field-help">If you received a code from host pre-registration, enter it here first.</p>
+            <p class="field-help">Received code from host? Enter it here first.</p>
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorNameInput">Visitor Name *</label>
@@ -92,7 +92,7 @@
               <option value="">Auto assign</option>
               <option value="" disabled>Loading slots from Firebase...</option>
             </select>
-            <p class="field-help">If the preferred slot is unavailable, the next available slot will be auto-assigned.</p>
+            <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
           </div>
           <div class="row stretch" style="grid-column: 1 / -1;">
             <button id="visitorSubmitBtn" class="btn btn-primary" type="submit">Submit Request</button>

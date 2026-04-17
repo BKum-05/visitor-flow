@@ -24,6 +24,7 @@ const pageAccess = {
 const PARKING_SLOT_COUNT = 14;
 const VISIT_PURPOSES = ["guest", "e-hailing", "delivery", "maintenance"];
 const INVITE_CODE_TTL_HOURS = 24;
+const LOGS_PAGE_SIZE = 10;
 
 let app;
 let auth;
@@ -38,9 +39,23 @@ let visitorRequestsCache = [];
 let pendingRequestsCache = [];
 let currentHostProfile = null;
 let activeSearch = "";
+let logsPageIndex = 0;
 let hideBannerTimer = null;
 let pendingConfirmAction = null;
 let realtimeUnsubscribers = [];
+let uiRevealObserver = null;
+let uiMutationObserver = null;
+
+const revealSelector = [
+  ".card",
+  ".stat",
+  ".item",
+  ".summary-box",
+  ".feature-card",
+  ".mini-stat",
+  ".home-loading",
+  ".logs-pagination"
+].join(",");
 
 const pageName = document.body.dataset.page || "home";
 const selectedRoleKey = "visitorFlowSelectedRole";
@@ -63,6 +78,8 @@ const ui = {
   globalError: get("globalError"),
   globalSuccess: get("globalSuccess"),
   searchInput: get("searchInput"),
+  logSortField: get("logSortField"),
+  logsPagination: get("logsPagination"),
   confirmModal: get("confirmModal"),
   modalTitle: get("modalTitle"),
   modalText: get("modalText"),
@@ -82,11 +99,76 @@ function get(id) {
   return document.getElementById(id);
 }
 
+function setupUiObservers() {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const supportsIntersectionObserver = typeof IntersectionObserver !== "undefined";
+
+  if (!supportsIntersectionObserver || prefersReducedMotion) {
+    document.querySelectorAll(revealSelector).forEach((node) => {
+      if (node.classList.contains("hidden")) return;
+      node.classList.add("is-visible");
+    });
+    return;
+  }
+
+  uiRevealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      uiRevealObserver?.unobserve(entry.target);
+    });
+  }, {
+    root: null,
+    threshold: 0.12,
+    rootMargin: "0px 0px -8% 0px"
+  });
+
+  observeRevealTargets(document);
+
+  uiMutationObserver = new MutationObserver((records) => {
+    records.forEach((record) => {
+      record.addedNodes.forEach((added) => {
+        if (!(added instanceof Element)) return;
+        observeRevealTargets(added);
+      });
+    });
+  });
+
+  uiMutationObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
+function observeRevealTargets(root) {
+  if (!uiRevealObserver || !root) return;
+
+  const nodes = [];
+  if (root instanceof Element && root.matches(revealSelector)) {
+    nodes.push(root);
+  }
+  if (root instanceof Element) {
+    nodes.push(...root.querySelectorAll(revealSelector));
+  }
+  if (root === document) {
+    nodes.push(...document.querySelectorAll(revealSelector));
+  }
+
+  nodes.forEach((node) => {
+    if (!(node instanceof Element)) return;
+    if (node.classList.contains("hidden")) return;
+    if (node.classList.contains("observe-reveal") || node.classList.contains("is-visible")) return;
+    node.classList.add("observe-reveal");
+    uiRevealObserver.observe(node);
+  });
+}
+
 async function bootstrap() {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
 
+  setupUiObservers();
   wireEvents();
   wireInputAutoFormatters();
   wirePurposeParkingControls();
@@ -388,6 +470,13 @@ function wireEvents() {
     });
   }
 
+  if (ui.logSortField) {
+    ui.logSortField.addEventListener("change", () => {
+      logsPageIndex = 0;
+      renderLogs(filteredLogs());
+    });
+  }
+
   const exportBtn = get("exportBtn");
   if (exportBtn) exportBtn.onclick = exportCsv;
 
@@ -420,6 +509,47 @@ function wireEvents() {
       if (action === "delete") confirmDeleteLog(id);
     });
   }
+
+  if (ui.logsPagination) {
+    ui.logsPagination.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const list = filteredLogs();
+      const totalPages = Math.max(1, Math.ceil(list.length / LOGS_PAGE_SIZE));
+      const action = button.dataset.action || "";
+
+      if (action === "logs-page-prev" && logsPageIndex > 0) {
+        logsPageIndex -= 1;
+      }
+
+      if (action === "logs-page-next" && logsPageIndex < totalPages - 1) {
+        logsPageIndex += 1;
+      }
+
+      renderLogs(list);
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (!ui.logsList || !ui.logsPagination) return;
+    const target = event.target;
+    const isTyping = target instanceof HTMLElement && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+    if (isTyping) return;
+
+    const list = filteredLogs();
+    const totalPages = Math.max(1, Math.ceil(list.length / LOGS_PAGE_SIZE));
+
+    if (event.key === "ArrowLeft" && logsPageIndex > 0) {
+      logsPageIndex -= 1;
+      renderLogs(list);
+    }
+
+    if (event.key === "ArrowRight" && logsPageIndex < totalPages - 1) {
+      logsPageIndex += 1;
+      renderLogs(list);
+    }
+  });
 
   if (ui.parkingAdminList) {
     ui.parkingAdminList.addEventListener("click", async (event) => {
@@ -938,9 +1068,7 @@ async function rejectVisitorRequest(requestId, button) {
 
 function filteredLogs() {
   const term = activeSearch.trim().toLowerCase();
-  if (!term) return logsCache;
-
-  return logsCache.filter((entry) => {
+  const filtered = !term ? logsCache : logsCache.filter((entry) => {
     const bucket = [
       entry.visitCode,
       entry.visitorName,
@@ -956,11 +1084,37 @@ function filteredLogs() {
     ].filter(Boolean).join(" ").toLowerCase();
     return bucket.includes(term);
   });
+
+  return sortLogs(filtered);
 }
 
 function applySearch() {
   activeSearch = ui.searchInput?.value.trim() || "";
+  logsPageIndex = 0;
   renderLogs(filteredLogs());
+}
+
+function sortLogs(list) {
+  const mode = ui.logSortField?.value || "checkedInDesc";
+  const sorted = [...list];
+
+  if (mode === "checkedInAsc") {
+    return sorted.sort((a, b) => (toDate(a.checkedInAt)?.getTime() || 0) - (toDate(b.checkedInAt)?.getTime() || 0));
+  }
+  if (mode === "visitorAZ") {
+    return sorted.sort((a, b) => String(a.visitorName || "").localeCompare(String(b.visitorName || "")));
+  }
+  if (mode === "hostAZ") {
+    return sorted.sort((a, b) => String(a.hostName || "").localeCompare(String(b.hostName || "")));
+  }
+  if (mode === "statusAZ") {
+    return sorted.sort((a, b) => String(a.status || "").localeCompare(String(b.status || "")));
+  }
+  if (mode === "parkingAZ") {
+    return sorted.sort((a, b) => String(a.parkingSlotLabel || "").localeCompare(String(b.parkingSlotLabel || ""), undefined, { numeric: true }));
+  }
+
+  return sorted.sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0));
 }
 
 function renderStats() {
@@ -1046,10 +1200,21 @@ function renderLogs(list) {
 
   if (!list.length) {
     ui.logsList.innerHTML = '<div class="item"><div><strong>No records found.</strong><p class="meta">Try a different search keyword.</p></div></div>';
+    if (ui.logsPagination) ui.logsPagination.innerHTML = "";
     return;
   }
 
-  ui.logsList.innerHTML = list.map((entry) => {
+  const totalPages = Math.max(1, Math.ceil(list.length / LOGS_PAGE_SIZE));
+  if (logsPageIndex >= totalPages) logsPageIndex = totalPages - 1;
+  if (logsPageIndex < 0) logsPageIndex = 0;
+
+  const start = logsPageIndex * LOGS_PAGE_SIZE;
+  const end = start + LOGS_PAGE_SIZE;
+  const visible = list.slice(start, end);
+  const hasPrev = logsPageIndex > 0;
+  const hasNext = logsPageIndex < totalPages - 1;
+
+  ui.logsList.innerHTML = visible.map((entry) => {
     const status = isInside(entry) ? "Inside" : "Checked out";
     const overnightLabel = entry.overnightParkingRequested ? "Yes" : "No";
     const actions = [];
@@ -1076,6 +1241,16 @@ function renderLogs(list) {
       </div>
     `;
   }).join("");
+
+  if (ui.logsPagination) {
+    ui.logsPagination.innerHTML = `
+      <div class="row logs-pager-row">
+        <button class="btn" data-action="logs-page-prev" type="button" ${hasPrev ? "" : "disabled"}>Prev</button>
+        <p class="meta">Page ${logsPageIndex + 1} of ${totalPages} | Showing ${start + 1}-${start + visible.length} of ${list.length}</p>
+        <button class="btn" data-action="logs-page-next" type="button" ${hasNext ? "" : "disabled"}>Next</button>
+      </div>
+    `;
+  }
 }
 
 function renderAdminInsights() {

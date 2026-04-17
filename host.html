@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -41,7 +41,7 @@
       <section class="hero-grid">
         <section class="hero-copy card">
           <span class="eyebrow">Pre-registration</span>
-          <h2>Create a smoother arrival experience</h2>
+          <h2>Create a smoother<br>arrival experience</h2>
           <div class="hero-kpis">
             <span>Ready before arrival</span>
             <span>Faster gate processing</span>
@@ -52,13 +52,14 @@
           <section class="card hero-side-card">
             <h3>Host advantages</h3>
             <div class="feature-grid">
-              <div class="feature-card"><strong>One code</strong><span class="muted">Give security a simple entry
+              <div class="feature-card"><strong>One code</strong><br><span class="muted">Give security a simple entry
                   path.</span></div>
-              <div class="feature-card"><strong>Arrival ready</strong><span class="muted">Guests can walk in
+              <div class="feature-card"><strong>Arrival ready</strong><br><span class="muted">Guests can walk in
                   faster.</span></div>
-              <div class="feature-card"><strong>Cleaner logs</strong><span class="muted">Pre-reg records are easier to
+              <div class="feature-card"><strong>Cleaner logs</strong><br><span class="muted">Pre-reg records are easier
+                  to
                   track.</span></div>
-              <div class="feature-card"><strong>Low effort</strong><span class="muted">Generate and go.</span></div>
+              <div class="feature-card"><strong>Low effort</strong><br><span class="muted">Generate and go.</span></div>
             </div>
           </section>
         </aside>
@@ -71,7 +72,8 @@
       <section class="grid two">
         <article class="card" id="hostPanel">
           <h3>Host Pre-Registration</h3>
-          <p class="muted">Create visitor code before arrival for faster gate processing. Unit number is auto-captured from your host account.</p>
+          <p class="muted">Create visitor code before arrival for faster gate processing. Unit number is auto-captured
+            from your host account.</p>
           <div class="input-grid two" id="hostForm">
             <div class="field-stack">
               <label class="field-label" for="hostVisitor">Visitor Name *</label>
@@ -118,13 +120,6 @@
               <label class="field-label" for="hostPhone">Phone</label>
               <input id="hostPhone" placeholder="Phone" type="tel" />
             </div>
-            <div class="field-stack">
-              <label class="field-label" for="hostOvernightParking">Overnight Parking Permission</label>
-              <div class="row">
-                <input id="hostOvernightParking" type="checkbox" />
-                <label for="hostOvernightParking">Request overnight parking approval</label>
-              </div>
-            </div>
             <div class="field-stack" id="hostParkingSlotWrap">
               <label class="field-label" for="hostParkingSlot">Preferred Parking (Optional)</label>
               <select id="hostParkingSlot">
@@ -132,6 +127,12 @@
                 <option value="" disabled>Loading slots from Firebase...</option>
               </select>
               <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
+            </div>
+            <div class="field-stack">
+              <div class="row checkbox-group">
+                <input id="hostOvernightParking" type="checkbox" aria-label="Request overnight parking approval" />
+                <label for="hostOvernightParking" class="checkbox-label">Request overnight parking</label>
+              </div>
             </div>
           </div>
           <button id="createPreregBtn" class="btn btn-primary">Generate Visit Code</button>
@@ -164,7 +165,9 @@
             <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
             <button id="searchBtn" class="btn">Search</button>
           </div>
+          <p class="field-help">Showing 10 results per page.</p>
           <div id="logsList" class="stack"></div>
+          <div id="logsPagination" class="logs-pagination"></div>
         </article>
       </section>
     </section>
