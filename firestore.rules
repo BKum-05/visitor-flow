@@ -6,39 +6,39 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function role() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
-    function hasUserRole(value) {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == value;
+    function hasUserRole(expectedRole) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == expectedRole;
     }
 
     function inAdminCollection() {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/admin/$(request.auth.uid));
+      return signedIn()
+        && exists(/databases/$(database)/documents/admin/$(request.auth.uid));
     }
 
     function inHostCollection() {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/host/$(request.auth.uid));
+      return signedIn()
+        && exists(/databases/$(database)/documents/host/$(request.auth.uid));
     }
 
     function isManagement() {
       return signedIn() && (
-        hasUserRole('management') ||
-        hasUserRole('admin') ||
-        hasUserRole('guard') ||
-        inAdminCollection()
+        hasUserRole('management')
+        || hasUserRole('admin')
+        || hasUserRole('guard')
+        || inAdminCollection()
       );
     }
 
     function isHost() {
       return signedIn() && (
-        hasUserRole('host') ||
-        inHostCollection()
+        hasUserRole('host')
+        || inHostCollection()
       );
     }
 
@@ -46,24 +46,19 @@ service cloud.firestore {
       return isManagement() || isHost();
     }
 
-    function isSelf(uid) {
-      return signedIn() && request.auth.uid == uid;
-    }
-
     match /users/{uid} {
       allow read: if isSelf(uid) || isManagement();
-      allow create, update, delete: if isManagement() || isSelf(uid);
+      allow create, update, delete: if isSelf(uid) || isManagement();
     }
 
-    // Compatibility collections: existing projects may keep role docs here.
     match /admin/{uid} {
       allow read: if isSelf(uid) || isManagement();
-      allow create, update, delete: if isManagement() || isSelf(uid);
+      allow create, update, delete: if isSelf(uid) || isManagement();
     }
 
     match /host/{uid} {
       allow read: if isSelf(uid) || isManagement();
-      allow create, update, delete: if isManagement() || isSelf(uid);
+      allow create, update, delete: if isSelf(uid) || isManagement();
     }
 
     match /visitor_requests/{requestId} {
@@ -73,15 +68,13 @@ service cloud.firestore {
 
     match /visitor_logs/{visitCode} {
       allow read: if signedIn();
-      allow create: if isManagement();
-      allow update: if isManagement();
-      allow delete: if isManagement();
+      allow create, update, delete: if isManagement();
     }
 
     match /preregistrations/{visitCode} {
-      allow read: if signedIn();
-      allow create: if canOperate();
-      allow update: if canOperate();
+      allow get: if true;
+      allow list: if signedIn();
+      allow create, update: if canOperate();
       allow delete: if isManagement();
     }
 

@@ -71,19 +71,36 @@
       <section class="grid two">
         <article class="card" id="hostPanel">
           <h3>Host Pre-Registration</h3>
-          <p class="muted">Create visitor code before arrival for faster gate processing.</p>
+          <p class="muted">Create visitor code before arrival for faster gate processing. Unit number is auto-captured from your host account.</p>
           <div class="input-grid two" id="hostForm">
             <div class="field-stack">
-              <label class="field-label" for="hostVisitor">Visitor Name</label>
+              <label class="field-label" for="hostVisitor">Visitor Name *</label>
               <input id="hostVisitor" placeholder="Visitor name*" type="text" required />
             </div>
             <div class="field-stack">
-              <label class="field-label" for="hostName">Unit Number</label>
+              <label class="field-label" for="hostName">Unit Number *</label>
               <input id="hostName" placeholder="Unit Number*" required />
             </div>
             <div class="field-stack">
-              <label class="field-label" for="hostPurpose">Purpose</label>
-              <input id="hostPurpose" placeholder="Purpose*" required />
+              <label class="field-label" for="hostPurpose">Purpose *</label>
+              <select id="hostPurpose" required>
+                <option value="guest">Guest</option>
+                <option value="e-hailing">E-Hailing</option>
+                <option value="delivery">Delivery</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="hostVehicle">Vehicle Number *</label>
+              <input id="hostVehicle" placeholder="Vehicle no*" required />
+            </div>
+            <div class="field-stack hidden" id="hostParkingNeedWrap">
+              <label class="field-label" for="hostParkingNeeded">Need Parking Slot?</label>
+              <select id="hostParkingNeeded" aria-label="Need parking slot">
+                <option value="">Select one</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostExpectedDate">Expected Date</label>
@@ -102,10 +119,13 @@
               <input id="hostPhone" placeholder="Phone" type="tel" />
             </div>
             <div class="field-stack">
-              <label class="field-label" for="hostVehicle">Vehicle Number</label>
-              <input id="hostVehicle" placeholder="Vehicle no" />
+              <label class="field-label" for="hostOvernightParking">Overnight Parking Permission</label>
+              <div class="row">
+                <input id="hostOvernightParking" type="checkbox" />
+                <label for="hostOvernightParking">Request overnight parking approval</label>
+              </div>
             </div>
-            <div class="field-stack">
+            <div class="field-stack" id="hostParkingSlotWrap">
               <label class="field-label" for="hostParkingSlot">Preferred Parking (Optional)</label>
               <select id="hostParkingSlot">
                 <option value="">Auto assign</option>
@@ -115,6 +135,17 @@
             </div>
           </div>
           <button id="createPreregBtn" class="btn btn-primary">Generate Visit Code</button>
+          <div id="preregCodePanel" class="item prereg-code-panel hidden" role="status" aria-live="polite">
+            <div>
+              <strong>Host Invitation Code</strong>
+              <p class="meta">Share this code with your visitor:</p>
+              <p id="preregCodeValue" class="prereg-code-value">-</p>
+            </div>
+            <div class="row">
+              <button id="copyPreregCodeBtn" class="btn" type="button">Copy Code</button>
+              <button id="closePreregCodeBtn" class="btn" type="button">Dismiss</button>
+            </div>
+          </div>
         </article>
 
 

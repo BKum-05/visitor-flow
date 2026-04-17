@@ -73,16 +73,33 @@
           </div>
           <div class="input-grid two" id="manualForm">
             <div class="field-stack">
-              <label class="field-label" for="manualVisitor">Visitor Name</label>
+              <label class="field-label" for="manualVisitor">Visitor Name *</label>
               <input id="manualVisitor" placeholder="Visitor name*" required />
             </div>
             <div class="field-stack">
-              <label class="field-label" for="manualHost">Unit Number</label>
+              <label class="field-label" for="manualHost">Unit Number *</label>
               <input id="manualHost" placeholder="Unit Number*" required />
             </div>
             <div class="field-stack">
-              <label class="field-label" for="manualPurpose">Purpose</label>
-              <input id="manualPurpose" placeholder="Purpose*" required />
+              <label class="field-label" for="manualPurpose">Purpose *</label>
+              <select id="manualPurpose" required>
+                <option value="guest">Guest</option>
+                <option value="e-hailing">E-Hailing</option>
+                <option value="delivery">Delivery</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="field-stack">
+              <label class="field-label" for="manualVehicle">Vehicle Number *</label>
+              <input id="manualVehicle" placeholder="Vehicle no*" required />
+            </div>
+            <div class="field-stack hidden" id="manualParkingNeedWrap">
+              <label class="field-label" for="manualParkingNeeded">Need Parking Slot?</label>
+              <select id="manualParkingNeeded" aria-label="Need parking slot">
+                <option value="">Select one</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualId">ID Number</label>
@@ -92,11 +109,7 @@
               <label class="field-label" for="manualPhone">Phone</label>
               <input id="manualPhone" placeholder="Phone" type="tel" />
             </div>
-            <div class="field-stack">
-              <label class="field-label" for="manualVehicle">Vehicle Number</label>
-              <input id="manualVehicle" placeholder="Vehicle no" />
-            </div>
-            <div class="field-stack">
+            <div class="field-stack" id="manualParkingSlotWrap">
               <label class="field-label" for="manualParkingSlot">Preferred Parking (Optional)</label>
               <select id="manualParkingSlot">
                 <option value="">Auto assign</option>
@@ -108,6 +121,14 @@
           <button id="manualCheckInBtn" class="btn btn-primary">Manual Check-In</button>
         </article>
 
+        <article class="card" id="pendingRequestsCard">
+          <h3>Pending Visitor Requests</h3>
+          <p class="muted">Review public visitor submissions and approve or reject directly.</p>
+          <div id="pendingRequestsList" class="stack"></div>
+        </article>
+      </section>
+
+      <section class="grid two">
         <article class="card">
           <h3>Currently Inside</h3>
           <div id="currentList" class="stack"></div>

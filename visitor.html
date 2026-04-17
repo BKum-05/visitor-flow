@@ -30,27 +30,45 @@
 
       <div class="home-auth-panel">
         <h3>Visitor Form</h3>
-        <p class="muted">All fields marked with * are required.</p>
+        <p class="muted">Only essential details are required.</p>
 
         <div id="globalError" class="banner error hidden"></div>
         <div id="globalSuccess" class="banner success hidden"></div>
 
         <form id="visitorRequestForm" class="input-grid two visitor-form-grid">
+          <div class="field-stack host-invite-field" style="grid-column: 1 / -1;">
+            <label class="field-label" for="visitorInviteCodeInput">Host Invitation Code</label>
+            <input id="visitorInviteCodeInput" placeholder="Enter host invitation code (optional)" />
+            <p class="field-help">If you received a code from host pre-registration, enter it here first.</p>
+          </div>
           <div class="field-stack">
-            <label class="field-label" for="visitorNameInput">Visitor Name</label>
+            <label class="field-label" for="visitorNameInput">Visitor Name *</label>
             <input id="visitorNameInput" placeholder="Full name*" required />
           </div>
           <div class="field-stack">
-            <label class="field-label" for="visitorPhoneInput">Phone</label>
-            <input id="visitorPhoneInput" type="tel" placeholder="Phone number*" required />
-          </div>
-          <div class="field-stack">
-            <label class="field-label" for="visitorHostInput">Host / Unit</label>
+            <label class="field-label" for="visitorHostInput">Host / Unit *</label>
             <input id="visitorHostInput" placeholder="Host name or unit*" required />
           </div>
           <div class="field-stack">
-            <label class="field-label" for="visitorPurposeInput">Purpose</label>
-            <input id="visitorPurposeInput" placeholder="Purpose of visit*" required />
+            <label class="field-label" for="visitorPurposeInput">Purpose *</label>
+            <select id="visitorPurposeInput" required>
+              <option value="guest">Guest</option>
+              <option value="e-hailing">E-Hailing</option>
+              <option value="delivery">Delivery</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div class="field-stack">
+            <label class="field-label" for="visitorVehicleInput">Vehicle Number *</label>
+            <input id="visitorVehicleInput" placeholder="Vehicle plate*" required />
+          </div>
+          <div class="field-stack hidden" id="visitorParkingNeedWrap">
+            <label class="field-label" for="visitorParkingNeeded">Need Parking Slot?</label>
+            <select id="visitorParkingNeeded" aria-label="Need parking slot">
+              <option value="">Select one</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorDateInput">Expected Date</label>
@@ -65,10 +83,10 @@
             <input id="visitorIdInput" placeholder="ID / passport" />
           </div>
           <div class="field-stack">
-            <label class="field-label" for="visitorVehicleInput">Vehicle Number</label>
-            <input id="visitorVehicleInput" placeholder="Vehicle plate" />
+            <label class="field-label" for="visitorPhoneInput">Phone</label>
+            <input id="visitorPhoneInput" type="tel" placeholder="Phone number" />
           </div>
-          <div class="field-stack">
+          <div class="field-stack" id="visitorParkingSlotWrap">
             <label class="field-label" for="visitorParkingSlot">Preferred Parking (Optional)</label>
             <select id="visitorParkingSlot">
               <option value="">Auto assign</option>

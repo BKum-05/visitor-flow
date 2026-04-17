@@ -713,9 +713,27 @@ input {
   gap: 12px;
 }
 
+.auth-panel-head {
+  display: grid;
+  gap: 4px;
+}
+
+.auth-section {
+  display: grid;
+  gap: 8px;
+}
+
+.section-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(20, 42, 77, 0.72);
+}
+
 .role-grid-landing {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -723,9 +741,11 @@ input {
   display: grid;
   justify-items: center;
   gap: 6px;
+  min-height: 88px;
   padding: 14px 8px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(21, 42, 77, 0.16);
 }
 
 .role-pill.active {
@@ -740,6 +760,44 @@ input {
 
 .landing-auth-form {
   margin-top: 2px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(27, 47, 82, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 244, 235, 0.74));
+}
+
+.auth-divider {
+  display: grid;
+  place-items: center;
+  margin: 2px 0;
+}
+
+.auth-divider span {
+  position: relative;
+  display: inline-block;
+  padding: 0 12px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(45, 59, 83, 0.72);
+}
+
+.auth-divider span::before,
+.auth-divider span::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 86px;
+  height: 1px;
+  background: rgba(31, 50, 84, 0.18);
+}
+
+.auth-divider span::before {
+  right: 100%;
+}
+
+.auth-divider span::after {
+  left: 100%;
 }
 
 .landing-login-btn {
@@ -755,6 +813,25 @@ input {
 
 .visitor-request-shell .home-auth-panel {
   align-content: start;
+}
+
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.trust-strip span {
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(25, 45, 79, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(24, 42, 74, 0.86);
 }
 
 .visitor-form-grid {
@@ -811,6 +888,15 @@ input {
 
   .role-grid-landing {
     grid-template-columns: 1fr;
+  }
+
+  .trust-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-divider span::before,
+  .auth-divider span::after {
+    width: 54px;
   }
 }
 
@@ -1223,6 +1309,26 @@ a:focus-visible {
 #managementPanel .btn.btn-primary,
 #appShell .hero .btn.btn-primary {
   letter-spacing: 0.01em;
+}
+
+.prereg-code-panel {
+  margin-top: 10px;
+  align-items: flex-start;
+}
+
+.prereg-code-value {
+  margin-top: 6px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #123e8e;
+}
+
+.host-invite-field {
+  border: 1px dashed rgba(18, 62, 142, 0.28);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 @media (hover: hover) {

@@ -38,9 +38,13 @@
             </div>
 
             <div class="home-auth-panel">
-                <h3>Sign in to continue</h3>
-                <p class="muted">Select Host or Admin portal first.</p>
+                <div class="auth-panel-head">
+                    <h3>Sign in to continue</h3>
+                    <p class="muted">Select your staff portal, then enter credentials.</p>
+                </div>
 
+                <div class="auth-section">
+                    <p class="section-kicker">Choose Portal</p>
                 <div id="roleGrid" class="role-grid-landing">
                     <button class="btn nav-link role-pill" data-role="host" type="button">
                         <span class="role-icon">🏠</span>
@@ -51,20 +55,60 @@
                         <span>Admin</span>
                     </button>
                 </div>
+                </div>
 
                 <div id="loginForm" class="stack landing-auth-form">
                     <div id="authError" class="banner error hidden"></div>
+                    <p class="section-kicker">Account Login</p>
                     <div class="input-grid one">
                         <div class="field-stack">
-                            <label class="field-label" for="emailInput">Email Address</label>
+                            <label class="field-label" for="emailInput">Email Address *</label>
                             <input type="email" id="emailInput" placeholder="Email Address" required>
                         </div>
                         <div class="field-stack">
-                            <label class="field-label" for="passwordInput">Password</label>
+                            <label class="field-label" for="passwordInput">Password *</label>
                             <input type="password" id="passwordInput" placeholder="Password" required>
                         </div>
                     </div>
                     <button id="loginBtn" class="btn btn-primary landing-login-btn">Enter Dashboard</button>
+                </div>
+
+                <div class="auth-divider" aria-hidden="true"><span>or</span></div>
+
+                <div class="stack landing-auth-form" id="hostRegisterPrompt">
+                    <button id="showHostRegisterBtn" class="btn" type="button">Register as new Host</button>
+                    <p class="field-help">New host? Create an account with your unit profile.</p>
+                </div>
+
+                <div class="stack landing-auth-form hidden" id="hostRegisterForm">
+                    <h3>Register Host Account</h3>
+                    <p class="muted">Create a host account with your profile so pre-registration auto-fills your unit number.</p>
+                    <div class="input-grid one">
+                        <div class="field-stack">
+                            <label class="field-label" for="registerNameInput">Full Name *</label>
+                            <input type="text" id="registerNameInput" placeholder="Full name" required>
+                        </div>
+                        <div class="field-stack">
+                            <label class="field-label" for="registerUnitInput">Unit Number *</label>
+                            <input type="text" id="registerUnitInput" placeholder="Unit number" required>
+                        </div>
+                        <div class="field-stack">
+                            <label class="field-label" for="registerPhoneInput">Telephone *</label>
+                            <input type="tel" id="registerPhoneInput" placeholder="Telephone" required>
+                        </div>
+                        <div class="field-stack">
+                            <label class="field-label" for="registerEmailInput">Email Address *</label>
+                            <input type="email" id="registerEmailInput" placeholder="Email address" required>
+                        </div>
+                        <div class="field-stack">
+                            <label class="field-label" for="registerPasswordInput">Password *</label>
+                            <input type="password" id="registerPasswordInput" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <div class="row stretch">
+                        <button id="registerHostBtn" class="btn">Create Host Account</button>
+                        <button id="cancelHostRegisterBtn" class="btn" type="button">Back to Sign In</button>
+                    </div>
                 </div>
 
                 <a class="landing-link visitor-cta" href="./visitor.html">Proceed as Visitor</a>
