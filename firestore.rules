@@ -46,18 +46,41 @@ service cloud.firestore {
       return isManagement() || isHost();
     }
 
-    function isHostOwnLog() {
+    function hostUnitFromProfile() {
+      return (
+        inHostCollection()
+        && get(/databases/$(database)/documents/host/$(request.auth.uid)).data.unitNumber is string
+      ) 
+        ? get(/databases/$(database)/documents/host/$(request.auth.uid)).data.unitNumber
+        : (
+          (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.unitNumber is string
+          )
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.unitNumber
+            : ""
+        );
+    }
+
+    function isHostUnitLog() {
       return isHost()
+        && resource.data.hostName is string
+        && hostUnitFromProfile() != ""
+        && resource.data.hostName == hostUnitFromProfile();
+    }
+
+    function isHostOwnLog() {
+      return signedIn()
         && (
           (
             resource.data.hostOwnerUid is string
             && resource.data.hostOwnerUid == request.auth.uid
           )
           || (
-            !(resource.data.hostOwnerUid is string)
-            && resource.data.checkedInBy is string
+            resource.data.checkedInBy is string
             && resource.data.checkedInBy == request.auth.uid
           )
+          || isHostUnitLog()
         );
     }
 
@@ -118,7 +141,7 @@ service cloud.firestore {
     }
 
     match /visitor_logs/{visitCode} {
-      allow read: if isManagement() || isHostOwnLog();
+      allow read: if isManagement() || isHost();
       allow create, update, delete: if isManagement();
     }
 

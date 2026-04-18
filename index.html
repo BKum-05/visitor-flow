@@ -63,19 +63,19 @@
                 </div>
 
                 <div id="loginForm" class="stack landing-auth-form">
-                    <div id="authError" class="banner error hidden"></div>
                     <p class="section-kicker">Account Login</p>
                     <div class="input-grid one">
                         <div class="field-stack">
                             <label class="field-label" for="emailInput">Email Address *</label>
-                            <input type="email" id="emailInput" placeholder="Email Address" required>
+                            <input type="email" id="emailInput" placeholder="Email Address" autocomplete="email" required>
                         </div>
                         <div class="field-stack">
                             <label class="field-label" for="passwordInput">Password *</label>
-                            <input type="password" id="passwordInput" placeholder="Password" required>
+                            <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" required>
                         </div>
                     </div>
                     <button id="loginBtn" class="btn btn-primary landing-login-btn">Enter Dashboard</button>
+                    <div id="loginError" class="banner error hidden"></div>
                 </div>
 
                 <div id="authDividerA" class="auth-divider" aria-hidden="true"><span>or</span></div>
@@ -91,29 +91,30 @@
                     <div class="input-grid one">
                         <div class="field-stack">
                             <label class="field-label" for="registerNameInput">Full Name *</label>
-                            <input type="text" id="registerNameInput" placeholder="Full name" required>
+                            <input type="text" id="registerNameInput" placeholder="Full name" autocomplete="name" required>
                         </div>
                         <div class="field-stack">
                             <label class="field-label" for="registerUnitInput">Unit Number *</label>
-                            <input type="text" id="registerUnitInput" placeholder="Unit number" required>
+                            <input type="text" id="registerUnitInput" placeholder="Unit number" autocomplete="address-line2" required>
                         </div>
                         <div class="field-stack">
                             <label class="field-label" for="registerPhoneInput">Telephone *</label>
-                            <input type="tel" id="registerPhoneInput" placeholder="Telephone" required>
+                            <input type="tel" id="registerPhoneInput" placeholder="Telephone" autocomplete="tel" required>
                         </div>
                         <div class="field-stack">
                             <label class="field-label" for="registerEmailInput">Email Address *</label>
-                            <input type="email" id="registerEmailInput" placeholder="Email address" required>
+                            <input type="email" id="registerEmailInput" placeholder="Email address" autocomplete="email" required>
                         </div>
                         <div class="field-stack">
                             <label class="field-label" for="registerPasswordInput">Password *</label>
-                            <input type="password" id="registerPasswordInput" placeholder="Password" required>
+                            <input type="password" id="registerPasswordInput" placeholder="Password" autocomplete="new-password" required>
                         </div>
                     </div>
                     <div class="row stretch">
                         <button id="registerHostBtn" class="btn">Create Host Account</button>
                         <button id="cancelHostRegisterBtn" class="btn" type="button">Back to Sign In</button>
                     </div>
+                    <div id="registerError" class="banner error hidden"></div>
                 </div>
 
                 <div id="authDividerB" class="auth-divider" aria-hidden="true"><span>or</span></div>

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateEmail, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection,
@@ -66,7 +66,9 @@ let selectedRole = sessionStorage.getItem(selectedRoleKey) || "";
 const ui = {
   authCard: get("authCard"),
   appShell: get("appShell"),
-  authError: get("authError"),
+  authError: get("loginError"),
+  loginError: get("loginError"),
+  registerError: get("registerError"),
   roleGrid: get("roleGrid"),
   loginBtn: get("loginBtn"),
   userMeta: get("userMeta"),
@@ -85,6 +87,15 @@ const ui = {
   modalText: get("modalText"),
   modalCancel: get("modalCancel"),
   modalConfirm: get("modalConfirm"),
+  profileModal: get("profileModal"),
+  profileName: get("profileName"),
+  profileEmail: get("profileEmail"),
+  profilePhone: get("profilePhone"),
+  profileUnit: get("profileUnit"),
+  profileUnitWrap: get("profileUnitWrap"),
+  profileError: get("profileError"),
+  profileCancel: get("profileCancel"),
+  profileSaveBtn: get("profileSaveBtn"),
   visitorRequestForm: get("visitorRequestForm"),
   visitorSubmitBtn: get("visitorSubmitBtn"),
   parkingAdminList: get("parkingAdminList"),
@@ -224,15 +235,20 @@ function setupAuthListener() {
         return;
       }
 
-      await loadHostProfile(user.uid);
+      try {
+        await loadHostProfile(user.uid);
+      } catch (error) {
+        console.warn("Could not load host profile, continuing:", error);
+      }
+      
       updateUIState();
       applyHostProfileToForm();
       syncNavigationLinks();
       await refreshData();
       setupRealtimeListeners(currentPage);
     } catch (error) {
-      console.error("Profile Load Error:", error);
-      showAuthError("Unable to load your profile. Please try again.");
+      console.error("Auth Error:", error);
+      showAuthError("Unable to load your dashboard. Please try again.");
     }
   });
 }
@@ -259,8 +275,11 @@ function setupRealtimeListeners(currentPage) {
     await refreshAdminPanelsOnly();
   });
 
-  const logsUnsub = onSnapshot(query(collection(db, "visitor_logs"), orderBy("checkedInAt", "desc"), limit(200)), async (snapshot) => {
-    logsCache = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+  const logsUnsub = onSnapshot(query(collection(db, "visitor_logs"), limit(500)), async (snapshot) => {
+    logsCache = snapshot.docs
+      .map((entry) => ({ id: entry.id, ...entry.data() }))
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
+      .slice(0, 200);
     await refreshAdminPanelsOnly();
   });
 
@@ -292,21 +311,21 @@ async function onLogin() {
   const pass = get("passwordInput")?.value || "";
 
   if (pageName === "home" && !selectedRole) {
-    showAuthError("Please select a role above first.");
+    showAuthError("Please select a role above first.", "login");
     return;
   }
 
   if (!email || !pass) {
-    showAuthError("Enter both email and password.");
+    showAuthError("Enter both email and password.", "login");
     return;
   }
 
   try {
     setLoginLoading(true);
-    showAuthError("");
+    showAuthError("", "all");
     await signInWithEmailAndPassword(auth, email, pass);
   } catch (error) {
-    showAuthError(authErrorMessage(error));
+    showAuthError(authErrorMessage(error), "login");
   } finally {
     setLoginLoading(false);
   }
@@ -320,7 +339,7 @@ async function onRegisterHostAccount() {
   const password = get("registerPasswordInput")?.value || "";
 
   if (!name || !unitNumber || !phone || !email || !password) {
-    showAuthError("Complete all host registration fields.");
+    showAuthError("Complete all host registration fields.", "register");
     return;
   }
 
@@ -353,12 +372,12 @@ async function onRegisterHostAccount() {
 
     selectedRole = "host";
     sessionStorage.setItem(selectedRoleKey, selectedRole);
-    showAuthError("");
+    showAuthError("", "all");
     setTransientMessage("Host account created. Welcome to your dashboard.");
     window.location.href = "host.html";
   } catch (error) {
     console.error(error);
-    showAuthError(authErrorMessage(error));
+    showAuthError(authErrorMessage(error), "register");
   } finally {
     setButtonLoading(button, false);
   }
@@ -370,7 +389,9 @@ function updateUIState() {
   document.body.setAttribute("data-page", currentRole);
 
   if (ui.userMeta && currentUser) {
-    ui.userMeta.textContent = currentUser.email || "";
+    const displayName = String(currentUser.displayName || currentHostProfile?.name || "").trim();
+    const email = String(currentUser.email || currentHostProfile?.email || "").trim();
+    ui.userMeta.textContent = [displayName, email].filter(Boolean).join(" • ") || email;
   }
 
   const chip = get("roleChip");
@@ -416,6 +437,20 @@ function wireEvents() {
     logoutBtn.onclick = () => signOut(auth).then(() => {
       setTransientMessage("You have signed out.");
       window.location.href = "index.html";
+    });
+  }
+
+  const editProfileBtn = get("editProfileBtn");
+  if (editProfileBtn) {
+    editProfileBtn.onclick = openProfileModal;
+  }
+
+  if (ui.profileCancel) ui.profileCancel.onclick = closeProfileModal;
+  if (ui.profileSaveBtn) ui.profileSaveBtn.onclick = saveProfile;
+
+  if (ui.profileModal) {
+    ui.profileModal.addEventListener("click", (event) => {
+      if (event.target === ui.profileModal) closeProfileModal();
     });
   }
 
@@ -648,10 +683,26 @@ function wireInputAutoFormatters() {
   wireFormatter("visitorNameInput", formatNameWords);
   wireFormatter("hostVisitor", formatNameWords);
   wireFormatter("manualVisitor", formatNameWords);
+  wireFormatter("profileName", formatNameWords);
 
   wireFormatter("visitorVehicleInput", formatCarPlate);
   wireFormatter("hostVehicle", formatCarPlate);
   wireFormatter("manualVehicle", formatCarPlate);
+
+  wireClearAuthError("emailInput", "login");
+  wireClearAuthError("passwordInput", "login");
+  wireClearAuthError("registerNameInput", "register");
+  wireClearAuthError("registerUnitInput", "register");
+  wireClearAuthError("registerPhoneInput", "register");
+  wireClearAuthError("registerEmailInput", "register");
+  wireClearAuthError("registerPasswordInput", "register");
+}
+
+function wireClearAuthError(id, section) {
+  const element = get(id);
+  if (!element) return;
+
+  element.addEventListener("input", () => showAuthError("", section));
 }
 
 function wireFormatter(id, formatter) {
@@ -728,18 +779,49 @@ async function refreshData() {
   await loadParkingSlots();
   renderParkingSelectOptions();
   syncAllPurposeParkingUi();
-  await loadVisitorRequests();
-  await loadPreregistrations();
-  await reconcileCheckedInPreregToLogs();
-  await loadLogs();
-  await loadPendingRequests();
+  
+  try {
+    await loadVisitorRequests();
+  } catch (error) {
+    console.warn("Could not load visitor requests:", error);
+  }
+  
+  try {
+    await loadPreregistrations();
+  } catch (error) {
+    console.warn("Could not load preregistrations:", error);
+  }
+  
+  try {
+    await reconcileCheckedInPreregToLogs();
+  } catch (error) {
+    console.warn("Could not reconcile preregistrations:", error);
+  }
+  
+  try {
+    await loadLogs();
+  } catch (error) {
+    console.warn("Could not load logs:", error);
+  }
+  
+  try {
+    await loadPendingRequests();
+  } catch (error) {
+    console.warn("Could not load pending requests:", error);
+  }
+  
   derivePreregStats();
   renderParkingAdminList();
   renderStats();
   renderLogs(filteredLogs());
   renderPendingRequests();
   renderAdminInsights();
-  await loadCurrentVisitors();
+  
+  try {
+    await loadCurrentVisitors();
+  } catch (error) {
+    console.warn("Could not load current visitors:", error);
+  }
 }
 
 async function refreshParkingUiOnly() {
@@ -851,13 +933,42 @@ async function loadLogs() {
   const baseRef = collection(db, "visitor_logs");
   if (currentRole === "host") {
     const uid = currentUser?.uid || "";
-    const [ownedSnap, legacySnap] = await Promise.all([
-      getDocs(query(baseRef, where("hostOwnerUid", "==", uid), orderBy("checkedInAt", "desc"), limit(200))),
-      getDocs(query(baseRef, where("checkedInBy", "==", uid), orderBy("checkedInAt", "desc"), limit(200)))
-    ]);
+    const unitNumber = String(currentHostProfile?.unitNumber || "").trim();
+
+    const fetchHostOwned = async () => {
+      try {
+        return await getDocs(query(baseRef, where("hostOwnerUid", "==", uid), limit(500)));
+      } catch (error) {
+        console.warn("hostOwnerUid query failed:", error.message);
+        return { docs: [] };
+      }
+    };
+
+    const fetchLegacy = async () => {
+      try {
+        return await getDocs(query(baseRef, where("checkedInBy", "==", uid), limit(500)));
+      } catch (error) {
+        console.warn("checkedInBy query failed:", error.message);
+        return { docs: [] };
+      }
+    };
+
+    const fetchByHostName = async () => {
+      if (!unitNumber) {
+        return { docs: [] };
+      }
+      try {
+        return await getDocs(query(baseRef, where("hostName", "==", unitNumber), limit(500)));
+      } catch (error) {
+        console.warn("hostName query failed:", error.message);
+        return { docs: [] };
+      }
+    };
+
+    const [ownedSnap, legacySnap, hostNameSnap] = await Promise.all([fetchHostOwned(), fetchLegacy(), fetchByHostName()]);
 
     const merged = new Map();
-    [...ownedSnap.docs, ...legacySnap.docs].forEach((entry) => {
+    [...ownedSnap.docs, ...legacySnap.docs, ...hostNameSnap.docs].forEach((entry) => {
       merged.set(entry.id, { id: entry.id, ...entry.data() });
     });
 
@@ -867,20 +978,40 @@ async function loadLogs() {
     return;
   }
 
-  const logsQuery = query(baseRef, orderBy("checkedInAt", "desc"), limit(200));
-  const snapshot = await getDocs(logsQuery);
-  logsCache = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+  try {
+    const logsQuery = query(baseRef, limit(500));
+    const snapshot = await getDocs(logsQuery);
+    logsCache = snapshot.docs
+      .map((entry) => ({ id: entry.id, ...entry.data() }))
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
+      .slice(0, 200);
+  } catch (error) {
+    console.warn("Admin logs query failed:", error.message);
+    logsCache = [];
+  }
 }
 
 async function resolveHostOwnerUidByUnit(unitOrHostName) {
   const unit = String(unitOrHostName || "").trim();
   if (!unit) return "";
 
-  const snapshot = await getDocs(
+  // Try host collection first
+  const hostSnapshot = await getDocs(
     query(collection(db, "host"), where("unitNumber", "==", unit), limit(1))
   );
+  if (hostSnapshot.docs.length > 0) {
+    return hostSnapshot.docs[0].id;
+  }
 
-  return snapshot.docs[0]?.id || "";
+  // Fall back to users collection
+  const usersSnapshot = await getDocs(
+    query(collection(db, "users"), where("unitNumber", "==", unit), limit(1))
+  );
+  if (usersSnapshot.docs.length > 0) {
+    return usersSnapshot.docs[0].id;
+  }
+
+  return "";
 }
 
 async function loadPreregistrations() {
@@ -1540,7 +1671,7 @@ async function createPreregistration() {
   if (button?.disabled) return;
 
   const visitorName = formatNameWords((get("hostVisitor")?.value || "").trim());
-  const hostName = ((currentHostProfile?.unitNumber || "").trim() || (get("hostName")?.value || "").trim());
+  const hostName = (get("hostName")?.value || "").trim();
   const purpose = normalizeVisitPurpose(get("hostPurpose")?.value || "");
   const parkingNeeded = (get("hostParkingNeeded")?.value || "").trim().toLowerCase();
   const expectedDate = (get("hostExpectedDate")?.value || "").trim();
@@ -1962,10 +2093,200 @@ function closeConfirm() {
   ui.confirmModal.setAttribute("aria-hidden", "true");
 }
 
-function showAuthError(message) {
-  if (!ui.authError) return;
-  ui.authError.textContent = message;
-  toggle(ui.authError, !!message);
+async function loadEditableProfile(uid) {
+  if (!uid) return {};
+
+  const merged = {};
+  try {
+    const usersSnapshot = await getDoc(doc(db, "users", uid));
+    if (usersSnapshot.exists()) {
+      Object.assign(merged, usersSnapshot.data() || {});
+    }
+  } catch (error) {
+    console.warn("Could not read users profile:", error.message || error);
+  }
+
+  const scopedCollection = currentRole === "host"
+    ? "host"
+    : (currentRole === "admin" || currentRole === "management" ? "admin" : "");
+
+  if (scopedCollection) {
+    try {
+      const scopedSnapshot = await getDoc(doc(db, scopedCollection, uid));
+      if (scopedSnapshot.exists()) {
+        Object.assign(merged, scopedSnapshot.data() || {});
+      }
+    } catch (error) {
+      console.warn(`Could not read ${scopedCollection} profile:`, error.message || error);
+    }
+  }
+
+  return merged;
+}
+
+async function openProfileModal() {
+  if (!ui.profileModal) return;
+
+  if (ui.profileSaveBtn) {
+    ui.profileSaveBtn.disabled = true;
+    ui.profileSaveBtn.textContent = "Loading...";
+  }
+
+  const profile = await loadEditableProfile(currentUser?.uid || "");
+  const profileName = String(profile.name || currentHostProfile?.name || currentUser?.displayName || "").trim();
+  const profileEmail = String(profile.email || currentUser?.email || "").trim();
+  const profilePhone = String(profile.phone || currentHostProfile?.phone || "").trim();
+  const profileUnit = String(profile.unitNumber || currentHostProfile?.unitNumber || "").trim();
+
+  if (ui.profileName) ui.profileName.value = profileName;
+  if (ui.profileEmail) ui.profileEmail.value = profileEmail;
+  if (ui.profilePhone) ui.profilePhone.value = profilePhone;
+  
+  if (ui.profileUnitWrap && currentRole === "host") {
+    ui.profileUnitWrap.style.display = "block";
+    if (ui.profileUnit) ui.profileUnit.value = profileUnit;
+  } else if (ui.profileUnitWrap) {
+    ui.profileUnitWrap.style.display = "none";
+  }
+  
+  if (ui.profileError) {
+    ui.profileError.textContent = "";
+    ui.profileError.classList.add("hidden");
+  }
+  
+  toggle(ui.profileModal, true);
+  ui.profileModal.setAttribute("aria-hidden", "false");
+
+  if (ui.profileSaveBtn) {
+    ui.profileSaveBtn.disabled = false;
+    ui.profileSaveBtn.textContent = "Save Changes";
+  }
+}
+
+function closeProfileModal() {
+  if (!ui.profileModal) return;
+  toggle(ui.profileModal, false);
+  ui.profileModal.setAttribute("aria-hidden", "true");
+}
+
+async function saveProfile() {
+  if (!currentUser) return;
+  
+  const profileName = (ui.profileName?.value || "").trim();
+  const profileEmail = (ui.profileEmail?.value || "").trim().toLowerCase();
+  const profilePhone = (ui.profilePhone?.value || "").trim();
+  const profileUnit = currentRole === "host" ? (ui.profileUnit?.value || "").trim() : "";
+  
+  if (!profileName) {
+    showProfileError("Full name is required.");
+    return;
+  }
+  
+  if (currentRole === "host" && !profileUnit) {
+    showProfileError("Unit number is required.");
+    return;
+  }
+
+  if (!profileEmail) {
+    showProfileError("Email is required.");
+    return;
+  }
+
+  if (!/^\S+@\S+\.\S+$/.test(profileEmail)) {
+    showProfileError("Please enter a valid email address.");
+    return;
+  }
+
+  if (profilePhone && !/^[0-9+\-\s()]{6,20}$/.test(profilePhone)) {
+    showProfileError("Phone format looks invalid.");
+    return;
+  }
+  
+  ui.profileSaveBtn.disabled = true;
+  ui.profileSaveBtn.textContent = "Saving...";
+  try {
+    const currentEmail = String(currentUser.email || "").trim().toLowerCase();
+    if (profileEmail !== currentEmail) {
+      await updateEmail(currentUser, profileEmail);
+    }
+
+    const currentDisplayName = String(currentUser.displayName || "").trim();
+    if (profileName && profileName !== currentDisplayName) {
+      await updateProfile(currentUser, { displayName: profileName });
+    }
+
+    const updates = {
+      name: profileName,
+      email: profileEmail,
+      phone: profilePhone,
+      updatedAt: serverTimestamp()
+    };
+    
+    if (currentRole === "host") {
+      updates.unitNumber = profileUnit;
+    }
+
+    const roleForUsers = currentRole === "management" ? "admin" : currentRole;
+    const usersUpdates = { ...updates, role: roleForUsers };
+    await setDoc(doc(db, "users", currentUser.uid), usersUpdates, { merge: true });
+
+    const scopedCollection = currentRole === "host"
+      ? "host"
+      : (currentRole === "admin" || currentRole === "management" ? "admin" : "");
+
+    if (scopedCollection) {
+      await setDoc(doc(db, scopedCollection, currentUser.uid), updates, { merge: true });
+    }
+
+    if (currentRole === "host") {
+      await loadHostProfile(currentUser.uid);
+      applyHostProfileToForm();
+    } else {
+      currentHostProfile = { ...(currentHostProfile || {}), ...updates };
+    }
+
+    currentUser = auth.currentUser || currentUser;
+
+    updateUIState();
+    await refreshData();
+    showGlobalSuccess("Profile updated successfully!");
+    closeProfileModal();
+  } catch (error) {
+    console.error(error);
+    if ((error?.code || "") === "auth/requires-recent-login") {
+      showProfileError("For security, please sign out and sign in again before changing email.");
+    } else {
+      showProfileError(`Unable to save profile. ${friendlyFirestoreError(error)}`);
+    }
+  } finally {
+    ui.profileSaveBtn.disabled = false;
+    ui.profileSaveBtn.textContent = "Save Changes";
+  }
+}
+
+function showProfileError(message) {
+  if (!ui.profileError) return;
+  ui.profileError.textContent = message;
+  ui.profileError.classList.remove("hidden");
+}
+
+function showAuthError(message, section = "login") {
+  if (section === "all") {
+    if (ui.loginError) {
+      ui.loginError.textContent = message;
+      toggle(ui.loginError, !!message);
+    }
+    if (ui.registerError) {
+      ui.registerError.textContent = message;
+      toggle(ui.registerError, !!message);
+    }
+    return;
+  }
+
+  const target = section === "register" ? ui.registerError : ui.loginError;
+  if (!target) return;
+  target.textContent = message;
+  toggle(target, !!message);
 }
 
 function showGlobalError(message) {
@@ -2030,18 +2351,26 @@ async function loadHostProfile(uid) {
   currentHostProfile = null;
   if (!uid) return;
 
-  const hostSnapshot = await getDoc(doc(db, "host", uid));
-  if (hostSnapshot.exists()) {
-    currentHostProfile = hostSnapshot.data() || null;
-    return;
+  try {
+    const hostSnapshot = await getDoc(doc(db, "host", uid));
+    if (hostSnapshot.exists()) {
+      currentHostProfile = hostSnapshot.data() || null;
+      return;
+    }
+  } catch (error) {
+    console.warn("Could not read from host collection:", error.message);
   }
 
-  const usersSnapshot = await getDoc(doc(db, "users", uid));
-  if (usersSnapshot.exists()) {
-    const data = usersSnapshot.data() || {};
-    if (String(data.role || "").toLowerCase() === "host" || data.unitNumber) {
-      currentHostProfile = data;
+  try {
+    const usersSnapshot = await getDoc(doc(db, "users", uid));
+    if (usersSnapshot.exists()) {
+      const data = usersSnapshot.data() || {};
+      if (String(data.role || "").toLowerCase() === "host" || data.unitNumber) {
+        currentHostProfile = data;
+      }
     }
+  } catch (error) {
+    console.warn("Could not read from users collection:", error.message);
   }
 }
 
@@ -2111,8 +2440,8 @@ function showTransientMessage() {
   if (!message) return;
   sessionStorage.removeItem(transientMessageKey);
 
-  if (ui.authError && pageName === "home") {
-    showAuthError(message);
+  if ((ui.loginError || ui.authError) && pageName === "home") {
+    showAuthError(message, "login");
     return;
   }
 

@@ -507,6 +507,17 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(15, 123, 255, 0.16);
 }
 
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible,
+.role-pill:focus-visible,
+.landing-link:focus-visible {
+  outline: 3px solid rgba(255, 138, 0, 0.9);
+  outline-offset: 2px;
+}
+
 input::placeholder {
   color: #7383aa;
 }
@@ -691,6 +702,7 @@ input[type="checkbox"]:focus {
   padding: 8px 10px;
   font-size: 0.84rem;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .banner.error {
@@ -721,8 +733,41 @@ input[type="checkbox"]:focus {
   box-shadow: var(--shadow);
 }
 
+.modal-card h3 {
+  margin-bottom: 2px;
+}
+
 .modal-card .row {
   margin-top: 13px;
+}
+
+.profile-modal-subtitle {
+  margin: 4px 0 10px;
+}
+
+.profile-form {
+  margin-top: 8px;
+}
+
+.profile-form input[readonly] {
+  background: #f3f6ff;
+  color: #4f5f8a;
+  cursor: not-allowed;
+}
+
+.profile-hint {
+  margin-top: 2px;
+}
+
+.error-text {
+  margin-top: 10px;
+  border: 2px solid #f1aaa1;
+  border-radius: 10px;
+  background: #ffe6e2;
+  color: #7a211b;
+  padding: 8px 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .visitor-request-shell {
@@ -821,6 +866,29 @@ input[type="checkbox"]:focus {
     margin: 10px auto 18px;
   }
 
+  .landing {
+    place-items: stretch;
+  }
+
+  .home-auth {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .home-auth-copy,
+  .home-auth-panel {
+    padding: 13px;
+  }
+
+  .role-grid-landing {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-auth-form {
+    gap: 10px;
+  }
+
   .topbar,
   .brand-row,
   .section-title-row,
@@ -868,5 +936,11 @@ input[type="checkbox"]:focus {
   .logs-toolbar .sort-select {
     min-width: 100%;
     width: 100%;
+  }
+
+  .modal-card {
+    width: min(100% - 16px, 480px);
+    max-height: calc(100vh - 24px);
+    overflow: auto;
   }
 }

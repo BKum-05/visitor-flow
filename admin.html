@@ -28,6 +28,7 @@
         </div>
         <div class="row">
           <span id="roleChip" class="chip"></span>
+          <button id="editProfileBtn" class="btn">Edit Profile</button>
           <button id="logoutBtn" class="btn">Sign Out</button>
         </div>
       </header>
@@ -172,7 +173,7 @@
             <option value="statusAZ">Status A-Z</option>
             <option value="parkingAZ">Parking 1-14</option>
           </select>
-          <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
+          <input id="searchInput" placeholder="Search" />
           <button id="searchBtn" class="btn">Search</button>
         </div>
         <p class="field-help">Showing 10 records per page.</p>
@@ -193,6 +194,38 @@
       </div>
     </div>
   </div>
+
+  <div id="profileModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-card">
+      <h3>Edit Profile</h3>
+      <p class="muted profile-modal-subtitle">Keep your account details up to date.</p>
+      <div id="profileForm" class="input-grid one profile-form">
+        <div class="field-stack">
+          <label class="field-label" for="profileName">Full Name *</label>
+          <input id="profileName" type="text" placeholder="Enter your full name" autocomplete="name" />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="profileEmail">Email</label>
+          <input id="profileEmail" type="email" placeholder="Enter your email" autocomplete="email" />
+        </div>
+        <div class="field-stack">
+          <label class="field-label" for="profilePhone">Phone</label>
+          <input id="profilePhone" type="tel" placeholder="Example: +60 12-345 6789" autocomplete="tel" />
+        </div>
+        <div class="field-stack" id="profileUnitWrap" style="display: none;">
+          <label class="field-label" for="profileUnit">Unit Number *</label>
+          <input id="profileUnit" type="text" placeholder="Example: T2 20A" autocomplete="address-line2" />
+          <p class="field-help profile-hint">Use the exact unit format used during check-in.</p>
+        </div>
+      </div>
+      <div id="profileError" class="error-text hidden"></div>
+      <div class="row right">
+        <button id="profileCancel" class="btn">Cancel</button>
+        <button id="profileSaveBtn" class="btn btn-primary" type="button">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./app.js"></script>
 </body>
 
