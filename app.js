@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateEmail, updateProfile
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateEmail, updateProfile,
+  setPersistence, browserSessionPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection,
@@ -55,7 +56,21 @@ const revealSelector = [
   ".feature-card",
   ".mini-stat",
   ".home-loading",
-  ".logs-pagination"
+  ".logs-pagination",
+  ".auth-panel-head",
+  ".auth-section",
+  ".landing-auth-form",
+  ".home-auth-copy",
+  ".home-auth-panel",
+  ".topbar",
+  ".page-nav",
+  ".hero-grid",
+  ".grid",
+  ".stats",
+  ".page > section",
+  "#appShell > header",
+  "#appShell > nav",
+  "#appShell > section"
 ].join(",");
 
 const pageName = document.body.dataset.page || "home";
@@ -130,9 +145,7 @@ function setupUiObservers() {
 
   uiRevealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add("is-visible");
-      uiRevealObserver?.unobserve(entry.target);
+      entry.target.classList.toggle("is-visible", entry.isIntersecting);
     });
   }, {
     root: null,
@@ -201,6 +214,13 @@ async function bootstrap() {
   wirePurposeParkingControls();
   syncAllPurposeParkingUi();
   showTransientMessage();
+
+  try {
+    // Keep auth only for the browser session to avoid long-lived auto-login.
+    await setPersistence(auth, browserSessionPersistence);
+  } catch (error) {
+    console.warn("Could not apply auth session persistence:", error);
+  }
 
   if (isPublicPage) {
     await refreshParkingUiOnly();
@@ -436,6 +456,7 @@ function wireEvents() {
   const showHostRegisterBtn = get("showHostRegisterBtn");
   if (showHostRegisterBtn) {
     showHostRegisterBtn.onclick = () => {
+      toggleHomeSignInSection(false);
       toggle(get("hostRegisterPrompt"), false);
       toggle(get("hostRegisterForm"), true);
       syncHomeAuthDividers();
@@ -445,12 +466,14 @@ function wireEvents() {
   const cancelHostRegisterBtn = get("cancelHostRegisterBtn");
   if (cancelHostRegisterBtn) {
     cancelHostRegisterBtn.onclick = () => {
+      toggleHomeSignInSection(true);
       toggle(get("hostRegisterForm"), false);
       toggle(get("hostRegisterPrompt"), true);
       syncHomeAuthDividers();
     };
   }
 
+  toggleHomeSignInSection(!showHostRegisterBtn || get("hostRegisterForm")?.classList.contains("hidden"));
   syncHomeAuthDividers();
 
   const passwordInput = get("passwordInput");
@@ -462,10 +485,18 @@ function wireEvents() {
 
   const logoutBtn = get("logoutBtn");
   if (logoutBtn) {
-    logoutBtn.onclick = () => signOut(auth).then(() => {
-      setTransientMessage("You have signed out.");
-      window.location.href = "index.html";
-    });
+    logoutBtn.onclick = () => {
+      openConfirm(
+        "Sign Out",
+        "Are you sure you want to sign out now?",
+        async () => {
+          await signOut(auth);
+          setTransientMessage("You have signed out.");
+          window.location.href = "index.html";
+        },
+        "Sign Out"
+      );
+    };
   }
 
   const editProfileBtn = get("editProfileBtn");
@@ -720,13 +751,26 @@ function syncHomeAuthDividers() {
   const dividerB = get("authDividerB");
   const prompt = get("hostRegisterPrompt");
   const form = get("hostRegisterForm");
-  if (!dividerA || !dividerB || !prompt || !form) return;
+  const loginForm = get("loginForm");
+  if (!dividerA || !dividerB || !prompt || !form || !loginForm) return;
 
   const showingPrompt = !prompt.classList.contains("hidden");
   const showingForm = !form.classList.contains("hidden");
+  const showingLogin = !loginForm.classList.contains("hidden");
 
-  toggle(dividerA, showingPrompt || showingForm);
+  toggle(dividerA, showingLogin && (showingPrompt || showingForm));
   toggle(dividerB, showingPrompt || showingForm);
+}
+
+function toggleHomeSignInSection(visible) {
+  const authCard = get("authCard");
+  if (!authCard) return;
+
+  const sectionSelectors = [".auth-panel-head", ".auth-section", "#loginForm"];
+  sectionSelectors.forEach((selector) => {
+    const element = authCard.querySelector(selector);
+    if (element) toggle(element, visible);
+  });
 }
 
 function wireInputAutoFormatters() {
@@ -2347,6 +2391,8 @@ async function openProfileModal() {
   if (ui.profileError) {
     ui.profileError.textContent = "";
     ui.profileError.classList.add("hidden");
+    ui.profileError.classList.remove("success-text");
+    ui.profileError.classList.add("error-text");
   }
   
   toggle(ui.profileModal, true);
@@ -2444,8 +2490,11 @@ async function saveProfile() {
 
     updateUIState();
     await refreshData();
+    showProfileSuccess("Profile updated successfully!");
     showGlobalSuccess("Profile updated successfully!");
-    closeProfileModal();
+    setTimeout(() => {
+      closeProfileModal();
+    }, 900);
   } catch (error) {
     console.error(error);
     if ((error?.code || "") === "auth/requires-recent-login") {
@@ -2462,6 +2511,16 @@ async function saveProfile() {
 function showProfileError(message) {
   if (!ui.profileError) return;
   ui.profileError.textContent = message;
+  ui.profileError.classList.remove("success-text");
+  ui.profileError.classList.add("error-text");
+  ui.profileError.classList.remove("hidden");
+}
+
+function showProfileSuccess(message) {
+  if (!ui.profileError) return;
+  ui.profileError.textContent = message;
+  ui.profileError.classList.remove("error-text");
+  ui.profileError.classList.add("success-text");
   ui.profileError.classList.remove("hidden");
 }
 

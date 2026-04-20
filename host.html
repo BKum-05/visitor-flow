@@ -213,11 +213,11 @@
       <div id="profileForm" class="input-grid one profile-form">
         <div class="field-stack">
           <label class="field-label" for="profileName">Full Name *</label>
-          <input id="profileName" type="text" placeholder="Enter your full name" autocomplete="name" />
+          <input id="profileName" type="text" placeholder="Enter your full name" autocomplete="name" required />
         </div>
         <div class="field-stack">
-          <label class="field-label" for="profileEmail">Email</label>
-          <input id="profileEmail" type="email" placeholder="Enter your email" autocomplete="email" />
+          <label class="field-label" for="profileEmail">Email *</label>
+          <input id="profileEmail" type="email" placeholder="Enter your email" autocomplete="email" required />
         </div>
         <div class="field-stack">
           <label class="field-label" for="profilePhone">Phone</label>
@@ -225,7 +225,7 @@
         </div>
         <div class="field-stack" id="profileUnitWrap" style="display: none;">
           <label class="field-label" for="profileUnit">Unit Number *</label>
-          <input id="profileUnit" type="text" placeholder="Example: T2 20A" autocomplete="address-line2" />
+          <input id="profileUnit" type="text" placeholder="Example: T2 20A" autocomplete="address-line2" required />
           <p class="field-help profile-hint">Use the exact unit format used during check-in.</p>
         </div>
       </div>

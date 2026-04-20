@@ -884,6 +884,17 @@ body[data-page="logs"] #logsRecordsCard .field-help {
   font-weight: 700;
 }
 
+.success-text {
+  margin-top: 10px;
+  border: 2px solid #9fe0c4;
+  border-radius: 10px;
+  background: #e4fff2;
+  color: #05563b;
+  padding: 8px 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
 .visitor-request-shell {
   width: min(1120px, 100%);
 }
