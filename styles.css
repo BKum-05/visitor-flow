@@ -3,7 +3,9 @@
   --paper: #fffaf1;
   --paper-2: #fff3de;
   --card: #ffffff;
+  --card-soft: #fffdf8;
   --line: #1d2a47;
+  --line-soft: rgba(29, 42, 71, 0.2);
   --brand: #0f7bff;
   --brand-deep: #005ad6;
   --accent: #ff8a00;
@@ -11,6 +13,7 @@
   --success: #00845a;
   --shadow: 8px 8px 0 #1d2a47;
   --shadow-soft: 4px 4px 0 #1d2a47;
+  --elev-1: 0 8px 22px rgba(20, 36, 66, 0.12);
   --r-lg: 22px;
   --r-md: 14px;
 }
@@ -127,15 +130,15 @@ a {
 }
 
 .card {
-  background: var(--card);
+  background: linear-gradient(180deg, var(--card) 0%, var(--card-soft) 100%);
   border: 2px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
-  padding: 16px;
+  box-shadow: var(--shadow), var(--elev-1);
+  padding: 18px;
 }
 
-#appShell > section.card + section.card {
-  margin-top: 14px;
+#appShell > section + section {
+  margin-top: 16px;
 }
 
 .topbar {
@@ -144,6 +147,12 @@ a {
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+  position: sticky;
+  top: 8px;
+  z-index: 16;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(29, 42, 71, 0.9);
+  backdrop-filter: blur(6px);
 }
 
 .brand-row {
@@ -207,9 +216,9 @@ h3 {
   gap: 8px;
   margin-bottom: 12px;
   padding: 8px;
-  border: 2px dashed var(--line);
+  border: 2px dashed rgba(29, 42, 71, 0.72);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .nav-link {
@@ -219,11 +228,13 @@ h3 {
   font-weight: 700;
   background: #fff;
   color: var(--ink);
-  transition: transform 0.14s ease;
+  box-shadow: 0 3px 0 rgba(21, 32, 59, 0.18);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
 }
 
 .nav-link:hover {
   transform: translateY(-1px);
+  box-shadow: 0 5px 0 rgba(21, 32, 59, 0.25);
 }
 
 .nav-link.active {
@@ -240,7 +251,7 @@ h3 {
 
 .hero-copy {
   background:
-    linear-gradient(160deg, rgba(15, 123, 255, 0.12), rgba(255, 138, 0, 0.14)),
+    linear-gradient(160deg, rgba(15, 123, 255, 0.14), rgba(255, 138, 0, 0.18)),
     #ffffff;
   position: relative;
   overflow: hidden;
@@ -300,7 +311,7 @@ h3 {
 .feature-card {
   border: 2px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fffcf6 100%);
   padding: 8px;
 }
 
@@ -424,15 +435,15 @@ h3 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .stat {
   border: 2px solid var(--line);
   border-radius: 14px;
-  background: #fff;
-  padding: 10px;
-  box-shadow: var(--shadow-soft);
+  background: linear-gradient(180deg, #ffffff 0%, #fff8ea 100%);
+  padding: 12px;
+  box-shadow: var(--shadow-soft), 0 8px 16px rgba(20, 36, 66, 0.08);
 }
 
 .stat p {
@@ -491,10 +502,10 @@ input,
 select,
 textarea {
   width: 100%;
-  /* height: 45px; */
+  min-height: 44px;
   border: 2px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdfa 100%);
   color: var(--ink);
   padding: 10px 11px;
 }
@@ -569,7 +580,7 @@ input[type="checkbox"]:focus {
 .btn {
   border: 2px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
   color: var(--ink);
   height: 42px;
   padding: 0 13px;
@@ -578,12 +589,19 @@ input[type="checkbox"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.12s ease;
+  box-shadow: 0 3px 0 rgba(21, 32, 59, 0.2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
   white-space: nowrap;
 }
 
 .btn:hover:not(:disabled) {
   transform: translate(-1px, -1px);
+  box-shadow: 0 5px 0 rgba(21, 32, 59, 0.26);
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(0, 0);
+  box-shadow: 0 2px 0 rgba(21, 32, 59, 0.2);
 }
 
 .btn:disabled {
@@ -618,6 +636,7 @@ input[type="checkbox"]:focus {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  border-left: 5px solid rgba(15, 123, 255, 0.55);
 }
 
 .item .meta {
@@ -655,10 +674,34 @@ input[type="checkbox"]:focus {
   justify-content: space-between;
   align-items: flex-start;
   gap: 9px;
+  margin-bottom: 4px;
 }
 
 .logs-toolbar {
   margin-top: 7px;
+}
+
+.report-filter-row {
+  margin-top: 8px;
+}
+
+.report-date-field {
+  min-width: 180px;
+  flex: 1;
+}
+
+.report-preset-row {
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.report-preset-row .btn {
+  width: auto;
+}
+
+.report-preset-row .btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
 }
 
 .logs-pagination {
@@ -668,6 +711,8 @@ input[type="checkbox"]:focus {
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
+  border-top: 2px dashed var(--line-soft);
+  padding-top: 8px;
 }
 
 .logs-pagination .meta {
@@ -677,6 +722,75 @@ input[type="checkbox"]:focus {
 
 .logs-pagination .btn {
   width: auto;
+}
+
+#adminLogsCard {
+  display: grid;
+  gap: 8px;
+}
+
+#adminLogsCard #logsList {
+  margin-top: 4px;
+  max-height: 460px;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+#adminLogsCard #logsList::-webkit-scrollbar {
+  width: 10px;
+}
+
+#adminLogsCard #logsList::-webkit-scrollbar-thumb {
+  background: rgba(21, 32, 59, 0.35);
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+#adminLogsCard #logsList .item {
+  align-items: flex-start;
+}
+
+#adminLogsCard .logs-pagination {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 2px dashed rgba(21, 42, 77, 0.22);
+}
+
+body[data-page="logs"] #logsList {
+  max-height: 520px;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+body[data-page="logs"] #logsList::-webkit-scrollbar {
+  width: 10px;
+}
+
+body[data-page="logs"] #logsList::-webkit-scrollbar-thumb {
+  background: rgba(21, 32, 59, 0.35);
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+body[data-page="logs"] #logsControlsCard .section-title-row {
+  align-items: center;
+}
+
+body[data-page="logs"] #logsControlsCard .btn {
+  width: auto;
+  min-width: 112px;
+}
+
+body[data-page="logs"] #logsRecordsCard .section-title-row {
+  margin-bottom: 4px;
+}
+
+body[data-page="logs"] #logsRecordsCard .field-help {
+  margin-top: 4px;
 }
 
 .logs-pager-row {
@@ -881,6 +995,10 @@ input[type="checkbox"]:focus {
     padding: 13px;
   }
 
+  .card {
+    padding: 14px;
+  }
+
   .role-grid-landing {
     grid-template-columns: 1fr;
   }
@@ -935,6 +1053,28 @@ input[type="checkbox"]:focus {
   .logs-toolbar input,
   .logs-toolbar .sort-select {
     min-width: 100%;
+    width: 100%;
+  }
+
+  #adminLogsCard #logsList {
+    max-height: 360px;
+    padding-right: 2px;
+  }
+
+  body[data-page="logs"] #logsList {
+    max-height: 420px;
+    padding-right: 2px;
+  }
+
+  body[data-page="logs"] #logsControlsCard .btn {
+    width: 100%;
+  }
+
+  .report-date-field {
+    min-width: 100%;
+  }
+
+  .report-preset-row .btn {
     width: 100%;
   }
 

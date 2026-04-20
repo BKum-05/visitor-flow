@@ -17,7 +17,7 @@
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
   <main class="page" id="appRoot">
-    <section id="appShell">
+    <section id="appShell" class="hidden">
       <header class="topbar card">
         <div class="brand-row">
           <div class="logo">VF</div>
@@ -153,6 +153,24 @@
 
         <article class="card">
           <h3>Visitor Logs</h3>
+          <div class="row stretch report-filter-row">
+            <div class="field-stack report-date-field">
+              <label class="field-label" for="reportFromDate">From</label>
+              <input id="reportFromDate" type="date" aria-label="Host logs start date" />
+            </div>
+            <div class="field-stack report-date-field">
+              <label class="field-label" for="reportToDate">To</label>
+              <input id="reportToDate" type="date" aria-label="Host logs end date" />
+            </div>
+          </div>
+          <div class="row report-preset-row" id="reportPresetBar">
+            <button class="btn" type="button" data-report-range="today">Today</button>
+            <button class="btn" type="button" data-report-range="yesterday">Yesterday</button>
+            <button class="btn" type="button" data-report-range="last7">Last 7 Days</button>
+            <button class="btn" type="button" data-report-range="month">This Month</button>
+            <button class="btn" type="button" data-report-range="all">All</button>
+          </div>
+          <p class="field-help" id="reportRangeLabel">Showing today only.</p>
           <label class="field-label" for="searchInput">Search & Sort Logs</label>
           <div class="row stretch logs-toolbar">
             <select id="logSortField" class="sort-select" aria-label="Sort logs">

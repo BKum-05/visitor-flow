@@ -45,6 +45,7 @@ let pendingConfirmAction = null;
 let realtimeUnsubscribers = [];
 let uiRevealObserver = null;
 let uiMutationObserver = null;
+let reportPreset = "today";
 
 const revealSelector = [
   ".card",
@@ -104,6 +105,11 @@ const ui = {
   preregCodePanel: get("preregCodePanel"),
   preregCodeValue: get("preregCodeValue"),
   pendingRequestsList: get("pendingRequestsList")
+  ,
+  reportFromDate: get("reportFromDate"),
+  reportToDate: get("reportToDate"),
+  reportPresetBar: get("reportPresetBar"),
+  reportRangeLabel: get("reportRangeLabel")
 };
 
 function get(id) {
@@ -186,6 +192,8 @@ async function bootstrap() {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
+  const currentFile = window.location.pathname.split("/").pop() || "index.html";
+  const isPublicPage = publicPages.includes(currentFile);
 
   setupUiObservers();
   wireEvents();
@@ -193,7 +201,13 @@ async function bootstrap() {
   wirePurposeParkingControls();
   syncAllPurposeParkingUi();
   showTransientMessage();
-  await refreshParkingUiOnly();
+
+  if (isPublicPage) {
+    await refreshParkingUiOnly();
+  } else {
+    toggle(ui.appShell, false);
+  }
+
   setupAuthListener();
 }
 
@@ -244,6 +258,16 @@ function setupAuthListener() {
       updateUIState();
       applyHostProfileToForm();
       syncNavigationLinks();
+
+      if (ui.reportFromDate && ui.reportToDate) {
+        if (!ui.reportFromDate.value && !ui.reportToDate.value) {
+          applyReportPreset("today");
+        } else {
+          markReportPresetButton(reportPreset);
+          refreshReportViews();
+        }
+      }
+
       await refreshData();
       setupRealtimeListeners(currentPage);
     } catch (error) {
@@ -278,8 +302,7 @@ function setupRealtimeListeners(currentPage) {
   const logsUnsub = onSnapshot(query(collection(db, "visitor_logs"), limit(500)), async (snapshot) => {
     logsCache = snapshot.docs
       .map((entry) => ({ id: entry.id, ...entry.data() }))
-      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
-      .slice(0, 200);
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0));
     await refreshAdminPanelsOnly();
   });
 
@@ -387,6 +410,7 @@ function updateUIState() {
   toggle(ui.authCard, false);
   toggle(ui.appShell, true);
   document.body.setAttribute("data-page", currentRole);
+  toggle(ui.statsRow, canViewStats());
 
   if (ui.userMeta && currentUser) {
     const displayName = String(currentUser.displayName || currentHostProfile?.name || "").trim();
@@ -399,6 +423,10 @@ function updateUIState() {
     chip.textContent = currentRole.toUpperCase();
     chip.className = `chip ${currentRole}`;
   }
+}
+
+function canViewStats() {
+  return currentRole === "admin" || currentRole === "management";
 }
 
 function wireEvents() {
@@ -521,6 +549,29 @@ function wireEvents() {
     ui.logSortField.addEventListener("change", () => {
       logsPageIndex = 0;
       renderLogs(filteredLogs());
+    });
+  }
+
+  if (ui.reportPresetBar) {
+    ui.reportPresetBar.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-report-range]");
+      if (!button) return;
+      const preset = String(button.dataset.reportRange || "").trim();
+      applyReportPreset(preset || "today");
+    });
+  }
+
+  if (ui.reportFromDate) {
+    ui.reportFromDate.addEventListener("change", () => {
+      reportPreset = "custom";
+      refreshReportViews();
+    });
+  }
+
+  if (ui.reportToDate) {
+    ui.reportToDate.addEventListener("change", () => {
+      reportPreset = "custom";
+      refreshReportViews();
     });
   }
 
@@ -973,8 +1024,7 @@ async function loadLogs() {
     });
 
     logsCache = Array.from(merged.values())
-      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
-      .slice(0, 200);
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0));
     return;
   }
 
@@ -983,8 +1033,7 @@ async function loadLogs() {
     const snapshot = await getDocs(logsQuery);
     logsCache = snapshot.docs
       .map((entry) => ({ id: entry.id, ...entry.data() }))
-      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0))
-      .slice(0, 200);
+      .sort((a, b) => (toDate(b.checkedInAt)?.getTime() || 0) - (toDate(a.checkedInAt)?.getTime() || 0));
   } catch (error) {
     console.warn("Admin logs query failed:", error.message);
     logsCache = [];
@@ -1026,9 +1075,23 @@ async function loadPreregistrations() {
 
 async function loadVisitorRequests() {
   const baseRef = collection(db, "visitor_requests");
-  const targetQuery = currentRole === "host"
-    ? query(baseRef, where("source", "==", "public"), limit(500))
-    : query(baseRef, where("source", "==", "public"), limit(500));
+  let targetQuery;
+
+  if (currentRole === "host") {
+    const unitNumber = String(currentHostProfile?.unitNumber || "").trim();
+    if (!unitNumber) {
+      visitorRequestsCache = [];
+      return;
+    }
+    targetQuery = query(
+      baseRef,
+      where("source", "==", "public"),
+      where("hostName", "==", unitNumber),
+      limit(500)
+    );
+  } else {
+    targetQuery = query(baseRef, where("source", "==", "public"), limit(500));
+  }
 
   const snapshot = await getDocs(targetQuery);
   visitorRequestsCache = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
@@ -1271,8 +1334,9 @@ async function rejectVisitorRequest(requestId, button) {
 }
 
 function filteredLogs() {
+  const scopedLogs = getReportScopedLogs(logsCache);
   const term = activeSearch.trim().toLowerCase();
-  const filtered = !term ? logsCache : logsCache.filter((entry) => {
+  const filtered = !term ? scopedLogs : scopedLogs.filter((entry) => {
     const bucket = [
       entry.visitCode,
       entry.visitorName,
@@ -1323,16 +1387,20 @@ function sortLogs(list) {
 
 function renderStats() {
   if (!ui.statsRow) return;
+  if (!canViewStats()) {
+    ui.statsRow.innerHTML = "";
+    toggle(ui.statsRow, false);
+    return;
+  }
+  toggle(ui.statsRow, true);
 
-  const insideCount = getActiveVisitors().length;
-  const checkedOut = logsCache.filter((entry) => !isInside(entry)).length;
-  const preregCount = preregCache.filter((entry) => {
-    const source = String(entry.source || "").toLowerCase();
-    if (source === "host_prereg" || source === "prereg") return true;
-    if (source === "visitor_request") return false;
-    return !!String(entry.createdBy || "").trim() && !String(entry.requestRefId || "").trim();
-  }).length;
-  const manualCount = visitorRequestsCache.filter((entry) => String(entry.source || "").toLowerCase() === "public").length;
+  const reportLogs = getReportScopedLogs(logsCache);
+
+  const insideCount = reportLogs.filter(isInside).length;
+  const checkedOut = reportLogs.filter((entry) => !isInside(entry)).length;
+  const preregCount = getReportScopedPrereg(preregCache).length;
+  const manualCount = reportLogs
+    .filter((entry) => String(entry.source || "").toLowerCase() === "manual").length;
 
   ui.statsRow.innerHTML = [
     statCard("Inside now", insideCount),
@@ -1458,25 +1526,27 @@ function renderLogs(list) {
 }
 
 function renderAdminInsights() {
+  const reportLogs = getReportScopedLogs(logsCache);
+
   if (ui.summaryBox) {
-    const todayCount = logsCache.filter((entry) => isSameDay(entry.checkedInAt, new Date())).length;
-    const insideCount = logsCache.filter(isInside).length;
-    const outCount = logsCache.length - insideCount;
-    const uniqueHosts = new Set(logsCache.map((entry) => (entry.hostName || "").trim()).filter(Boolean)).size;
+    const todayCount = reportLogs.filter((entry) => isSameDay(entry.checkedInAt, new Date())).length;
+    const insideCount = reportLogs.filter(isInside).length;
+    const outCount = reportLogs.length - insideCount;
+    const uniqueHosts = new Set(reportLogs.map((entry) => (entry.hostName || "").trim()).filter(Boolean)).size;
 
     ui.summaryBox.innerHTML = [
-      summaryTile("Total records", logsCache.length),
+      summaryTile("Total records", reportLogs.length),
       summaryTile("Today check-ins", todayCount),
       summaryTile("Inside now", insideCount),
       summaryTile("Unique hosts", uniqueHosts),
       summaryTile("Checked out", outCount),
-      summaryTile("Manual check-ins", logsCache.filter((entry) => entry.source === "manual").length)
+      summaryTile("Manual check-ins", reportLogs.filter((entry) => entry.source === "manual").length)
     ].join("");
   }
 
   if (ui.topHosts) {
     const counter = new Map();
-    logsCache.forEach((entry) => {
+    reportLogs.forEach((entry) => {
       const host = (entry.hostName || "").trim();
       if (!host) return;
       counter.set(host, (counter.get(host) || 0) + 1);
@@ -1499,6 +1569,131 @@ function renderAdminInsights() {
 
 function summaryTile(label, value) {
   return `<div class="summary-box"><div class="label">${escapeHtml(label)}</div><div class="value">${value}</div></div>`;
+}
+
+function formatDateInputValue(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function parseDateInput(value, endOfDay = false) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const parsed = new Date(`${raw}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (endOfDay) parsed.setHours(23, 59, 59, 999);
+  return parsed;
+}
+
+function reportRangeText(start, end) {
+  if (!start && !end) return "Showing all records.";
+  if (start && end) {
+    return `Showing ${formatDateOnly(start)} to ${formatDateOnly(end)}.`;
+  }
+  if (start) return `Showing from ${formatDateOnly(start)}.`;
+  return `Showing up to ${formatDateOnly(end)}.`;
+}
+
+function getReportDateRange() {
+  const start = parseDateInput(ui.reportFromDate?.value || "", false);
+  const end = parseDateInput(ui.reportToDate?.value || "", true);
+  if (start && end && start.getTime() > end.getTime()) {
+    return { start: end, end: start };
+  }
+  return { start, end };
+}
+
+function inReportRange(value, start, end) {
+  const stamp = toDate(value);
+  if (!stamp) return false;
+  const time = stamp.getTime();
+  if (start && time < start.getTime()) return false;
+  if (end && time > end.getTime()) return false;
+  return true;
+}
+
+function getReportScopedLogs(list) {
+  if (!ui.reportFromDate && !ui.reportToDate) return [...list];
+
+  const { start, end } = getReportDateRange();
+  if (!start && !end) return [...list];
+  return list.filter((entry) => inReportRange(entry.checkedInAt, start, end));
+}
+
+function getReportScopedPrereg(list) {
+  if (!ui.reportFromDate && !ui.reportToDate) return [...list];
+  if (!(currentRole === "admin" || currentRole === "management")) return [...list];
+
+  const { start, end } = getReportDateRange();
+  if (!start && !end) return [...list];
+  return list.filter((entry) => {
+    const sourceDate = entry.createdAt || entry.bookingTimestamp || entry.expectedDate || null;
+    return inReportRange(sourceDate, start, end);
+  });
+}
+
+function getReportScopedRequests(list) {
+  if (!ui.reportFromDate && !ui.reportToDate) return [...list];
+  if (!(currentRole === "admin" || currentRole === "management")) return [...list];
+
+  const { start, end } = getReportDateRange();
+  if (!start && !end) return [...list];
+  return list.filter((entry) => inReportRange(entry.createdAt || entry.bookingTimestamp, start, end));
+}
+
+function markReportPresetButton(preset) {
+  if (!ui.reportPresetBar) return;
+  ui.reportPresetBar.querySelectorAll("button[data-report-range]").forEach((button) => {
+    button.classList.toggle("active", String(button.dataset.reportRange || "") === preset);
+  });
+}
+
+function refreshReportViews() {
+  logsPageIndex = 0;
+  if (ui.reportRangeLabel) {
+    const { start, end } = getReportDateRange();
+    ui.reportRangeLabel.textContent = reportRangeText(start, end);
+  }
+  renderStats();
+  renderLogs(filteredLogs());
+  renderAdminInsights();
+}
+
+function applyReportPreset(preset) {
+  if (!ui.reportFromDate || !ui.reportToDate) return;
+
+  reportPreset = preset;
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (preset === "today") {
+    ui.reportFromDate.value = formatDateInputValue(todayStart);
+    ui.reportToDate.value = formatDateInputValue(todayStart);
+  } else if (preset === "yesterday") {
+    const yesterday = new Date(todayStart);
+    yesterday.setDate(yesterday.getDate() - 1);
+    ui.reportFromDate.value = formatDateInputValue(yesterday);
+    ui.reportToDate.value = formatDateInputValue(yesterday);
+  } else if (preset === "last7") {
+    const start = new Date(todayStart);
+    start.setDate(start.getDate() - 6);
+    ui.reportFromDate.value = formatDateInputValue(start);
+    ui.reportToDate.value = formatDateInputValue(todayStart);
+  } else if (preset === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    ui.reportFromDate.value = formatDateInputValue(start);
+    ui.reportToDate.value = formatDateInputValue(todayStart);
+  } else if (preset === "all") {
+    ui.reportFromDate.value = "";
+    ui.reportToDate.value = "";
+  }
+
+  markReportPresetButton(preset);
+  refreshReportViews();
 }
 
 async function checkInByCode() {
@@ -2557,13 +2752,22 @@ function formatTimestamp(input) {
   const value = toDate(input);
   if (!value) return "-";
 
-  const day = String(value.getDate()).padStart(2, "0");
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const year = value.getFullYear();
+  const dateText = formatDateOnly(value);
   const hour = String(value.getHours()).padStart(2, "0");
   const minute = String(value.getMinutes()).padStart(2, "0");
 
-  return `${day}/${month}/${year} ${hour}:${minute}`;
+  return `${dateText} ${hour}:${minute}`;
+}
+
+function formatDateOnly(input) {
+  const value = toDate(input);
+  if (!value) return "-";
+
+  const day = String(value.getDate()).padStart(2, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const year = value.getFullYear();
+
+  return `${day}/${month}/${year}`;
 }
 
 function csvEscape(value) {

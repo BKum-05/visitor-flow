@@ -84,6 +84,53 @@ service cloud.firestore {
         );
     }
 
+    function isHostUnitMatch() {
+      return isHost()
+        && resource.data.hostName is string
+        && hostUnitFromProfile() != ""
+        && resource.data.hostName == hostUnitFromProfile();
+    }
+
+    function isHostOwnPrereg() {
+      return isHost()
+        && (
+          (
+            resource.data.createdBy is string
+            && resource.data.createdBy == request.auth.uid
+          )
+          || (
+            resource.data.hostOwnerUid is string
+            && resource.data.hostOwnerUid == request.auth.uid
+          )
+          || isHostUnitMatch()
+        );
+    }
+
+    function isHostPreregCreateAllowed() {
+      return isHost()
+        && request.resource.data.createdBy is string
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.hostName is string
+        && hostUnitFromProfile() != ""
+        && request.resource.data.hostName == hostUnitFromProfile();
+    }
+
+    function isHostPreregUpdateAllowed() {
+      return isHost()
+        && resource.data.createdBy is string
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.hostName == resource.data.hostName;
+    }
+
+    function isPublicInviteReadable() {
+      return resource.data.status == 'pending'
+        && (
+          !(resource.data.expiresAt is timestamp)
+          || resource.data.expiresAt > request.time
+        );
+    }
+
     function validVisitorRequestCreate() {
       return request.resource.data.keys().hasOnly([
         'inviteCode',
@@ -137,18 +184,20 @@ service cloud.firestore {
 
     match /visitor_requests/{requestId} {
       allow create: if validVisitorRequestCreate();
-      allow read, update, delete: if canOperate();
+      allow read: if isManagement() || isHostUnitMatch();
+      allow update, delete: if isManagement();
     }
 
     match /visitor_logs/{visitCode} {
-      allow read: if isManagement() || isHost();
+      allow read: if isManagement() || isHostOwnLog();
       allow create, update, delete: if isManagement();
     }
 
     match /preregistrations/{visitCode} {
-      allow get: if true;
-      allow list: if signedIn();
-      allow create, update: if canOperate();
+      allow get: if isManagement() || isHostOwnPrereg() || isPublicInviteReadable();
+      allow list: if isManagement() || isHostOwnPrereg();
+      allow create: if isManagement() || isHostPreregCreateAllowed();
+      allow update: if isManagement() || isHostPreregUpdateAllowed();
       allow delete: if isManagement();
     }
 

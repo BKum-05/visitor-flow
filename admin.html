@@ -17,7 +17,7 @@
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
   <main class="page" id="appRoot">
-    <section id="appShell">
+    <section id="appShell" class="hidden">
       <header class="topbar card">
         <div class="brand-row">
           <div class="logo">VF</div>
@@ -59,6 +59,55 @@
             </div>
           </section>
         </aside>
+      </section>
+
+      <section class="grid two" id="reportAndLogsRow">
+        <section class="card" id="reportFiltersCard">
+          <div class="section-title-row">
+            <div>
+              <h3>Report Range</h3>
+              <p class="muted">Filter dashboard metrics and logs by date window.</p>
+            </div>
+          </div>
+          <div class="row stretch report-filter-row">
+            <div class="field-stack report-date-field">
+              <label class="field-label" for="reportFromDate">From</label>
+              <input id="reportFromDate" type="date" aria-label="Report start date" />
+            </div>
+            <div class="field-stack report-date-field">
+              <label class="field-label" for="reportToDate">To</label>
+              <input id="reportToDate" type="date" aria-label="Report end date" />
+            </div>
+          </div>
+          <div class="row report-preset-row" id="reportPresetBar">
+            <button class="btn" type="button" data-report-range="today">Today</button>
+            <button class="btn" type="button" data-report-range="yesterday">Yesterday</button>
+            <button class="btn" type="button" data-report-range="last7">Last 7 Days</button>
+            <button class="btn" type="button" data-report-range="month">This Month</button>
+            <button class="btn" type="button" data-report-range="all">All</button>
+          </div>
+          <p class="field-help" id="reportRangeLabel">Showing today only.</p>
+        </section>
+
+        <section class="card" id="adminLogsCard">
+          <h3>Visitor Logs</h3>
+          <label class="field-label" for="searchInput">Search & Sort Logs</label>
+          <div class="row stretch logs-toolbar">
+            <select id="logSortField" class="sort-select" aria-label="Sort logs">
+              <option value="checkedInDesc">Newest first</option>
+              <option value="checkedInAsc">Oldest first</option>
+              <option value="visitorAZ">Visitor A-Z</option>
+              <option value="hostAZ">Host A-Z</option>
+              <option value="statusAZ">Status A-Z</option>
+              <option value="parkingAZ">Parking 1-14</option>
+            </select>
+            <input id="searchInput" placeholder="Search" />
+            <button id="searchBtn" class="btn">Search</button>
+          </div>
+          <p class="field-help">Showing 10 records per page.</p>
+          <div id="logsList" class="stack"></div>
+          <div id="logsPagination" class="logs-pagination"></div>
+        </section>
       </section>
 
       <section class="stats" id="statsRow"></section>
@@ -161,25 +210,6 @@
         <div id="parkingAdminList" class="stack"></div>
       </section>
 
-      <section class="card">
-        <h3>Visitor Logs</h3>
-        <label class="field-label" for="searchInput">Search & Sort Logs</label>
-        <div class="row stretch logs-toolbar">
-          <select id="logSortField" class="sort-select" aria-label="Sort logs">
-            <option value="checkedInDesc">Newest first</option>
-            <option value="checkedInAsc">Oldest first</option>
-            <option value="visitorAZ">Visitor A-Z</option>
-            <option value="hostAZ">Host A-Z</option>
-            <option value="statusAZ">Status A-Z</option>
-            <option value="parkingAZ">Parking 1-14</option>
-          </select>
-          <input id="searchInput" placeholder="Search" />
-          <button id="searchBtn" class="btn">Search</button>
-        </div>
-        <p class="field-help">Showing 10 records per page.</p>
-        <div id="logsList" class="stack"></div>
-        <div id="logsPagination" class="logs-pagination"></div>
-      </section>
     </section>
 
   </main>

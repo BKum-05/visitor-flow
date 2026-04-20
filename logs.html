@@ -13,7 +13,7 @@
   <div class="bg-orb orb-a"></div>
   <div class="bg-orb orb-b"></div>
   <main class="page" id="appRoot">
-    <section id="appShell">
+    <section id="appShell" class="hidden">
       <header class="topbar card">
         <div class="brand-row">
           <div class="logo">VF</div>
@@ -57,17 +57,53 @@
         </aside>
       </section>
 
-      <div class="row">
-        <button id="refreshBtn" class="btn">Refresh</button>
-      </div>
-      <p class="field-help">Results are paged 10 per screen. Use Prev/Next buttons or keyboard Left/Right arrows to move through records.</p>
+      <section class="card" id="logsControlsCard">
+        <div class="section-title-row">
+          <div>
+            <h3>Quick Controls</h3>
+            <p class="muted">Refresh records and use keyboard Left/Right arrows to move log pages.</p>
+          </div>
+          <button id="refreshBtn" class="btn">Refresh</button>
+        </div>
+      </section>
 
-      <div id="globalError" class="banner error hidden"></div>
-      <div id="globalSuccess" class="banner success hidden"></div>
+
+      <section class="card" id="reportFiltersCard">
+        <div class="section-title-row">
+          <div>
+            <h3>Date Filter</h3>
+            <p class="muted">Filter log records and stats by date window.</p>
+          </div>
+        </div>
+        <div class="row stretch report-filter-row">
+          <div class="field-stack report-date-field">
+            <label class="field-label" for="reportFromDate">From</label>
+            <input id="reportFromDate" type="date" aria-label="Logs start date" />
+          </div>
+          <div class="field-stack report-date-field">
+            <label class="field-label" for="reportToDate">To</label>
+            <input id="reportToDate" type="date" aria-label="Logs end date" />
+          </div>
+        </div>
+        <div class="row report-preset-row" id="reportPresetBar">
+          <button class="btn" type="button" data-report-range="today">Today</button>
+          <button class="btn" type="button" data-report-range="yesterday">Yesterday</button>
+          <button class="btn" type="button" data-report-range="last7">Last 7 Days</button>
+          <button class="btn" type="button" data-report-range="month">This Month</button>
+          <button class="btn" type="button" data-report-range="all">All</button>
+        </div>
+        <p class="field-help" id="reportRangeLabel">Showing today only.</p>
+      </section>
 
       <section class="stats" id="statsRow"></section>
 
-      <section class="card">
+      <section class="card" id="logsRecordsCard">
+        <div class="section-title-row">
+          <div>
+            <h3>Visitor Logs</h3>
+            <p class="muted">Search, sort, and review records in one place.</p>
+          </div>
+        </div>
         <label class="field-label" for="searchInput">Search & Sort Logs</label>
         <div class="row stretch logs-toolbar">
           <select id="logSortField" class="sort-select" aria-label="Sort logs">

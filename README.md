@@ -18,7 +18,7 @@ It supports a full visitor lifecycle from host invitation to admin approval, che
 
 ## Highlights
 
-- Role-based access: `host`, `management`, `admin`
+- Role-based access: `visitor`, `host`, `admin`
 - Public visitor request submission (no account needed)
 - Host pre-registration with copyable invitation code panel
 - Invitation code TTL (expires after configured window)
@@ -26,11 +26,14 @@ It supports a full visitor lifecycle from host invitation to admin approval, che
 - Automatic name and vehicle formatting (name casing, uppercase plate)
 - Dynamic parking slots loaded from Firestore (`P01` to `P14`)
 - Preferred slot + automatic fallback assignment
-- Pending request approval/rejection by admin
+- Pending request approval/rejection by management/admin
+- Host logs and prereg views are scoped to the host's own unit/records
 - Real-time admin dashboard updates using Firestore listeners
+- Dashboard stats are shown for management/admin only
 - Accurate inside/checked-out counters after checkout
 - Overnight parking request support (shown as Yes/No)
 - Vehicle-first display in Currently Inside, Parking, and Logs
+- Dates are displayed as `dd/mm/yyyy`
 
 ## Tech Stack
 
@@ -96,7 +99,7 @@ Stores staff profile and role.
 
 ### 2) `visitor_requests/{requestId}`
 
-Public visitor submissions waiting for admin action.
+Public visitor submissions waiting for management/admin action. Hosts can only read requests for their own unit.
 
 ```json
 {
@@ -218,16 +221,25 @@ Admin dashboard uses Firestore snapshot listeners for live updates in:
 
 No manual browser refresh is required for normal admin monitoring.
 
+Host dashboards use scoped Firestore reads for their own logs and preregistrations only.
+
 ## Firestore Rules Expectations
 
 This project expects rules that allow:
 
 - Public create for `visitor_requests`
-- Controlled read/write by authenticated staff roles
 - Management/admin write for approval, check-in, checkout flows
+- Host read access only for their own unit-related requests, preregistrations, and logs
 - Secure access to parking and logs based on role
 
 Publish `firestore.rules` before production use.
+
+### Security model summary
+
+- `visitor_requests`: public create, scoped host read, management/admin update/delete
+- `preregistrations`: host can create/read only their own unit-related records, management/admin has full control
+- `visitor_logs`: host can read only their own logs, management/admin has full control
+- `parking_slots`: readable by anyone, writable by authenticated staff, deletable by management/admin only
 
 ## QA Checklist
 
@@ -257,8 +269,18 @@ Publish `firestore.rules` before production use.
 	- Check code format and expiry window
 	- Confirm code exists in `preregistrations`
 
+- Dates look wrong
+	- The app displays dates as `dd/mm/yyyy`
+	- Native browser date pickers may still show the input control in the browser's locale style
+
 ## Security Note
 
 `firebase-config.js` is public in client-side Firebase apps by design.
 
 Security is enforced by Firebase Authentication + Firestore Rules, not by hiding frontend config.
+
+## Notes
+
+- Host pages are intentionally scoped to host-owned or host-unit data.
+- Admin stats are date-filtered and shown in `dd/mm/yyyy` format in the UI.
+- The app is intended for deployment on GitHub Pages with Firebase backend services.
