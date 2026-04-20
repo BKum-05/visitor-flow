@@ -59,18 +59,7 @@ const revealSelector = [
   ".logs-pagination",
   ".auth-panel-head",
   ".auth-section",
-  ".landing-auth-form",
-  ".home-auth-copy",
-  ".home-auth-panel",
-  ".topbar",
-  ".page-nav",
-  ".hero-grid",
-  ".grid",
-  ".stats",
-  ".page > section",
-  "#appShell > header",
-  "#appShell > nav",
-  "#appShell > section"
+  ".landing-auth-form"
 ].join(",");
 
 const pageName = document.body.dataset.page || "home";
@@ -145,7 +134,9 @@ function setupUiObservers() {
 
   uiRevealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      entry.target.classList.toggle("is-visible", entry.isIntersecting);
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      uiRevealObserver?.unobserve(entry.target);
     });
   }, {
     root: null,
@@ -1409,10 +1400,6 @@ function applySearch() {
 function sortLogs(list) {
   const mode = ui.logSortField?.value || "checkedInDesc";
   const sorted = [...list];
-
-  if (mode === "checkedInAsc") {
-    return sorted.sort((a, b) => (toDate(a.checkedInAt)?.getTime() || 0) - (toDate(b.checkedInAt)?.getTime() || 0));
-  }
   if (mode === "visitorAZ") {
     return sorted.sort((a, b) => String(a.visitorName || "").localeCompare(String(b.visitorName || "")));
   }
@@ -1513,11 +1500,32 @@ function getActiveVisitors() {
 
 function renderLogs(list) {
   if (!ui.logsList) return;
+  const forceScrollPage = pageName === "host" || pageName === "admin";
 
   if (!list.length) {
+    if (forceScrollPage) {
+      ui.logsList.classList.remove("logs-list-empty", "logs-list-compact");
+      ui.logsList.classList.add("logs-list-filled");
+    } else {
+      ui.logsList.classList.add("logs-list-empty");
+      ui.logsList.classList.remove("logs-list-compact");
+      ui.logsList.classList.remove("logs-list-filled");
+    }
     ui.logsList.innerHTML = '<div class="item"><div><strong>No records found.</strong><p class="meta">Try a different search keyword.</p></div></div>';
     if (ui.logsPagination) ui.logsPagination.innerHTML = "";
     return;
+  }
+
+  if (forceScrollPage) {
+    ui.logsList.classList.remove("logs-list-empty", "logs-list-compact");
+    ui.logsList.classList.add("logs-list-filled");
+  } else if (list.length <= 4) {
+    ui.logsList.classList.add("logs-list-compact");
+    ui.logsList.classList.remove("logs-list-empty");
+    ui.logsList.classList.remove("logs-list-filled");
+  } else {
+    ui.logsList.classList.remove("logs-list-empty", "logs-list-compact");
+    ui.logsList.classList.add("logs-list-filled");
   }
 
   const totalPages = Math.max(1, Math.ceil(list.length / LOGS_PAGE_SIZE));

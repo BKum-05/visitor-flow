@@ -464,6 +464,14 @@ h3 {
   margin-bottom: 14px;
 }
 
+body[data-page="host"] .grid.two {
+  align-items: start;
+}
+
+body[data-page="host"] .grid.two > .card {
+  align-self: start;
+}
+
 .input-grid {
   display: grid;
   gap: 10px;
@@ -758,12 +766,74 @@ input[type="checkbox"]:focus {
   border-top: 2px dashed rgba(21, 42, 77, 0.22);
 }
 
+#hostLogsCard {
+  display: grid;
+  gap: 8px;
+}
+
+#hostLogsCard #logsList {
+  margin-top: 4px;
+  max-height: 320px;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 6px;
+}
+
+#hostLogsCard #logsList::-webkit-scrollbar {
+  width: 10px;
+}
+
+#hostLogsCard #logsList::-webkit-scrollbar-thumb {
+  background: rgba(21, 32, 59, 0.35);
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+
+#hostLogsCard #logsList .item {
+  align-items: flex-start;
+}
+
+#hostLogsCard .logs-pagination {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 2px dashed rgba(21, 42, 77, 0.22);
+}
+
 body[data-page="logs"] #logsList {
   max-height: 520px;
   overflow: auto;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   padding-right: 6px;
+}
+
+#logsList.logs-list-empty {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0;
+}
+
+#logsList.logs-list-compact {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0;
+}
+
+#logsList.logs-list-empty .item {
+  margin-bottom: 0;
+}
+
+#logsList.logs-list-empty .item + .item {
+  margin-top: 0;
+}
+
+#logsList.logs-list-compact .item {
+  margin-bottom: 0;
+}
+
+#logsList.logs-list-compact .item + .item {
+  margin-top: 0;
 }
 
 body[data-page="logs"] #logsList::-webkit-scrollbar {
