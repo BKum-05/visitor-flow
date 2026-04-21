@@ -115,7 +115,7 @@
             <option value="statusAZ">Status A-Z</option>
             <option value="parkingAZ">Parking 1-14</option>
           </select>
-          <input id="searchInput" placeholder="Search visitor, host, code, purpose" />
+          <input id="searchInput" placeholder="Search visitor, host, code, purpose" aria-label="Search logs" autocomplete="off" maxlength="80" />
           <button id="searchBtn" class="btn">Search</button>
         </div>
         <p class="field-help">Tip: Try vehicle plate, host name, or visit code. Search and sort apply across all pages of results.</p>
@@ -151,7 +151,7 @@
         </div>
         <div class="field-stack">
           <label class="field-label" for="profilePhone">Phone</label>
-          <input id="profilePhone" type="tel" placeholder="Example: +60 12-345 6789" autocomplete="tel" />
+          <input id="profilePhone" type="tel" placeholder="Example: +60 12-345 6789" autocomplete="tel" inputmode="tel" maxlength="20" />
         </div>
         <div class="field-stack" id="profileUnitWrap" style="display: none;">
           <label class="field-label" for="profileUnit">Unit Number *</label>

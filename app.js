@@ -26,6 +26,10 @@ const PARKING_SLOT_COUNT = 14;
 const VISIT_PURPOSES = ["guest", "e-hailing", "delivery", "maintenance"];
 const INVITE_CODE_TTL_HOURS = 24;
 const LOGS_PAGE_SIZE = 10;
+const SEARCH_MAX_CHARS = 80;
+const MIN_PASSWORD_LENGTH = 8;
+const VISIT_CODE_PATTERN = /^[A-Z0-9-]{4,20}$/;
+const PHONE_PATTERN = /^[0-9+\-\s()]{6,20}$/;
 
 let app;
 let auth;
@@ -192,6 +196,43 @@ function observeRevealTargets(root) {
   });
 }
 
+function revealInViewTargets(root) {
+  if (!root) return;
+
+  const nodes = [];
+  if (root instanceof Element && root.matches(revealSelector)) {
+    nodes.push(root);
+  }
+  if (root instanceof Element) {
+    nodes.push(...root.querySelectorAll(revealSelector));
+  }
+  if (root === document) {
+    nodes.push(...document.querySelectorAll(revealSelector));
+  }
+
+  nodes.forEach((node) => {
+    if (!(node instanceof Element)) return;
+    if (node.classList.contains("hidden") || !node.classList.contains("observe-reveal")) return;
+
+    const rect = node.getBoundingClientRect();
+    const inViewport = rect.bottom > 0 && rect.top < window.innerHeight;
+    if (!inViewport) return;
+
+    node.classList.add("is-visible");
+    uiRevealObserver?.unobserve(node);
+  });
+}
+
+function scheduleRevealFallback(root) {
+  if (!uiRevealObserver || !root) return;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      revealInViewTargets(root);
+    });
+  });
+}
+
 async function bootstrap() {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
@@ -341,7 +382,7 @@ async function refreshAdminPanelsOnly() {
 }
 
 async function onLogin() {
-  const email = get("emailInput")?.value.trim() || "";
+  const email = normalizeEmail(get("emailInput")?.value || "");
   const pass = get("passwordInput")?.value || "";
 
   if (pageName === "home" && !selectedRole) {
@@ -351,6 +392,11 @@ async function onLogin() {
 
   if (!email || !pass) {
     showAuthError("Enter both email and password.", "login");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    showAuthError("Please enter a valid email address.", "login");
     return;
   }
 
@@ -366,14 +412,29 @@ async function onLogin() {
 }
 
 async function onRegisterHostAccount() {
-  const name = formatNameWords((get("registerNameInput")?.value || "").trim());
-  const unitNumber = (get("registerUnitInput")?.value || "").trim();
-  const phone = (get("registerPhoneInput")?.value || "").trim();
-  const email = (get("registerEmailInput")?.value || "").trim();
+  const name = formatNameWords(cleanTextInput(get("registerNameInput")?.value || "", 80));
+  const unitNumber = cleanTextInput(get("registerUnitInput")?.value || "", 20);
+  const phone = cleanPhone(get("registerPhoneInput")?.value || "");
+  const email = normalizeEmail(get("registerEmailInput")?.value || "");
   const password = get("registerPasswordInput")?.value || "";
 
   if (!name || !unitNumber || !phone || !email || !password) {
     showAuthError("Complete all host registration fields.", "register");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    showAuthError("Please enter a valid email address.", "register");
+    return;
+  }
+
+  if (!isValidPhone(phone)) {
+    showAuthError("Enter a valid phone number.", "register");
+    return;
+  }
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    showAuthError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`, "register");
     return;
   }
 
@@ -1392,7 +1453,8 @@ function filteredLogs() {
 }
 
 function applySearch() {
-  activeSearch = ui.searchInput?.value.trim() || "";
+  activeSearch = cleanTextInput(ui.searchInput?.value || "", SEARCH_MAX_CHARS);
+  if (ui.searchInput) ui.searchInput.value = activeSearch;
   logsPageIndex = 0;
   renderLogs(filteredLogs());
 }
@@ -1400,6 +1462,9 @@ function applySearch() {
 function sortLogs(list) {
   const mode = ui.logSortField?.value || "checkedInDesc";
   const sorted = [...list];
+  if (mode === "checkedInAsc") {
+    return sorted.sort((a, b) => (toDate(a.checkedInAt)?.getTime() || 0) - (toDate(b.checkedInAt)?.getTime() || 0));
+  }
   if (mode === "visitorAZ") {
     return sorted.sort((a, b) => String(a.visitorName || "").localeCompare(String(b.visitorName || "")));
   }
@@ -1501,6 +1566,7 @@ function getActiveVisitors() {
 function renderLogs(list) {
   if (!ui.logsList) return;
   const forceScrollPage = pageName === "host" || pageName === "admin";
+  const hasDateFilter = !!((ui.reportFromDate?.value || "").trim() || (ui.reportToDate?.value || "").trim());
 
   if (!list.length) {
     if (forceScrollPage) {
@@ -1511,7 +1577,10 @@ function renderLogs(list) {
       ui.logsList.classList.remove("logs-list-compact");
       ui.logsList.classList.remove("logs-list-filled");
     }
-    ui.logsList.innerHTML = '<div class="item"><div><strong>No records found.</strong><p class="meta">Try a different search keyword.</p></div></div>';
+    const noDataHint = activeSearch
+      ? "Try a different search keyword or clear search."
+      : (hasDateFilter ? "Try widening the date range or selecting All." : "New records will appear here once visitors are checked in.");
+    ui.logsList.innerHTML = `<div class="item"><div><strong>No records found.</strong><p class="meta">${escapeHtml(noDataHint)}</p></div></div>`;
     if (ui.logsPagination) ui.logsPagination.innerHTML = "";
     return;
   }
@@ -1755,11 +1824,18 @@ async function checkInByCode() {
   if (button?.disabled) return;
 
   const codeInput = get("preregCodeInput");
-  const visitCode = (codeInput?.value || "").trim().toUpperCase();
+  const visitCode = normalizeVisitCode(codeInput?.value || "");
   if (!visitCode) {
     showGlobalError("Enter a pre-registration code.");
     return;
   }
+
+  if (!isValidVisitCode(visitCode)) {
+    showGlobalError("Invalid code format. Use letters, numbers, or dashes only.");
+    return;
+  }
+
+  if (codeInput) codeInput.value = visitCode;
 
   setButtonLoading(button, true, "Checking In...");
   try {
@@ -1848,13 +1924,13 @@ async function manualCheckIn() {
   const button = get("manualCheckInBtn");
   if (button?.disabled) return;
 
-  const visitorName = formatNameWords((get("manualVisitor")?.value || "").trim());
-  const hostName = (get("manualHost")?.value || "").trim();
+  const visitorName = formatNameWords(cleanTextInput(get("manualVisitor")?.value || "", 80));
+  const hostName = cleanTextInput(get("manualHost")?.value || "", 20);
   const purpose = normalizeVisitPurpose(get("manualPurpose")?.value || "");
   const parkingNeeded = (get("manualParkingNeeded")?.value || "").trim().toLowerCase();
-  const idNumber = (get("manualId")?.value || "").trim();
-  const phone = (get("manualPhone")?.value || "").trim();
-  const vehicleNo = formatCarPlate((get("manualVehicle")?.value || "").trim());
+  const idNumber = cleanTextInput(get("manualId")?.value || "", 30);
+  const phone = cleanPhone(get("manualPhone")?.value || "");
+  const vehicleNo = formatCarPlate(cleanTextInput(get("manualVehicle")?.value || "", 14));
   const preferredParkingSlot = normalizeParkingSlot(get("manualParkingSlot")?.value || "");
   const parkingRequested = shouldRequestParking(purpose, parkingNeeded);
 
@@ -1865,6 +1941,11 @@ async function manualCheckIn() {
 
   if (purpose !== "guest" && !["yes", "no"].includes(parkingNeeded)) {
     showGlobalError("Please select whether a parking slot is needed.");
+    return;
+  }
+
+  if (phone && !isValidPhone(phone)) {
+    showGlobalError("Phone format looks invalid.");
     return;
   }
 
@@ -1917,16 +1998,16 @@ async function createPreregistration() {
   const button = get("createPreregBtn");
   if (button?.disabled) return;
 
-  const visitorName = formatNameWords((get("hostVisitor")?.value || "").trim());
-  const hostName = (get("hostName")?.value || "").trim();
+  const visitorName = formatNameWords(cleanTextInput(get("hostVisitor")?.value || "", 80));
+  const hostName = cleanTextInput(get("hostName")?.value || "", 20);
   const purpose = normalizeVisitPurpose(get("hostPurpose")?.value || "");
   const parkingNeeded = (get("hostParkingNeeded")?.value || "").trim().toLowerCase();
   const expectedDate = (get("hostExpectedDate")?.value || "").trim();
   const expectedClock = (get("hostExpectedTime")?.value || "").trim();
   const expectedTime = [expectedDate, expectedClock].filter(Boolean).join(" ");
-  const idNumber = (get("hostId")?.value || "").trim();
-  const phone = (get("hostPhone")?.value || "").trim() || String(currentHostProfile?.phone || "").trim();
-  const vehicleNo = formatCarPlate((get("hostVehicle")?.value || "").trim());
+  const idNumber = cleanTextInput(get("hostId")?.value || "", 30);
+  const phone = cleanPhone(get("hostPhone")?.value || "") || cleanPhone(String(currentHostProfile?.phone || ""));
+  const vehicleNo = formatCarPlate(cleanTextInput(get("hostVehicle")?.value || "", 14));
   const preferredParkingSlot = normalizeParkingSlot(get("hostParkingSlot")?.value || "");
   const overnightParkingRequested = !!get("hostOvernightParking")?.checked;
   const parkingRequested = shouldRequestParking(purpose, parkingNeeded);
@@ -1938,6 +2019,11 @@ async function createPreregistration() {
 
   if (purpose !== "guest" && !["yes", "no"].includes(parkingNeeded)) {
     showGlobalError("Please select whether a parking slot is needed.");
+    return;
+  }
+
+  if (phone && !isValidPhone(phone)) {
+    showGlobalError("Phone format looks invalid.");
     return;
   }
 
@@ -1996,17 +2082,17 @@ async function submitVisitorRequest() {
   const button = ui.visitorSubmitBtn;
   if (button?.disabled) return;
 
-  const inviteCode = (get("visitorInviteCodeInput")?.value || "").trim().toUpperCase();
-  const visitorName = formatNameWords((get("visitorNameInput")?.value || "").trim());
-  const hostName = (get("visitorHostInput")?.value || "").trim();
+  const inviteCode = normalizeVisitCode(get("visitorInviteCodeInput")?.value || "");
+  const visitorName = formatNameWords(cleanTextInput(get("visitorNameInput")?.value || "", 80));
+  const hostName = cleanTextInput(get("visitorHostInput")?.value || "", 40);
   const purpose = normalizeVisitPurpose(get("visitorPurposeInput")?.value || "");
   const parkingNeeded = (get("visitorParkingNeeded")?.value || "").trim().toLowerCase();
-  const phone = (get("visitorPhoneInput")?.value || "").trim();
+  const phone = cleanPhone(get("visitorPhoneInput")?.value || "");
   const expectedDate = (get("visitorDateInput")?.value || "").trim();
   const expectedClock = (get("visitorTimeInput")?.value || "").trim();
   const expectedTime = [expectedDate, expectedClock].filter(Boolean).join(" ");
-  const idNumber = (get("visitorIdInput")?.value || "").trim();
-  const vehicleNo = formatCarPlate((get("visitorVehicleInput")?.value || "").trim());
+  const idNumber = cleanTextInput(get("visitorIdInput")?.value || "", 30);
+  const vehicleNo = formatCarPlate(cleanTextInput(get("visitorVehicleInput")?.value || "", 14));
   const preferredParkingSlot = normalizeParkingSlot(get("visitorParkingSlot")?.value || "");
   const parkingRequested = shouldRequestParking(purpose, parkingNeeded);
 
@@ -2017,6 +2103,16 @@ async function submitVisitorRequest() {
 
   if (purpose !== "guest" && !["yes", "no"].includes(parkingNeeded)) {
     showGlobalError("Please select whether a parking slot is needed.");
+    return;
+  }
+
+  if (inviteCode && !isValidVisitCode(inviteCode)) {
+    showGlobalError("Invitation code format is invalid.");
+    return;
+  }
+
+  if (phone && !isValidPhone(phone)) {
+    showGlobalError("Phone format looks invalid.");
     return;
   }
 
@@ -2069,9 +2165,14 @@ async function autofillVisitorByInviteCode() {
   const input = get("visitorInviteCodeInput");
   if (!input) return;
 
-  const inviteCode = String(input.value || "").trim().toUpperCase();
+  const inviteCode = normalizeVisitCode(input.value || "");
   input.value = inviteCode;
   if (!inviteCode) return;
+
+  if (!isValidVisitCode(inviteCode)) {
+    showGlobalError("Invalid invitation code format.");
+    return;
+  }
 
   try {
     const preregSnap = await getDoc(doc(db, "preregistrations", inviteCode));
@@ -2264,7 +2365,8 @@ function confirmDeleteLog(id) {
 }
 
 function exportCsv() {
-  if (!logsCache.length) {
+  const recordsToExport = filteredLogs();
+  if (!recordsToExport.length) {
     showGlobalError("No records available to export.");
     return;
   }
@@ -2286,7 +2388,7 @@ function exportCsv() {
   ];
 
   const lines = [headers.join(",")];
-  logsCache.forEach((entry) => {
+  recordsToExport.forEach((entry) => {
     const row = [
       entry.visitCode || entry.id,
       entry.visitorName || "",
@@ -2316,7 +2418,7 @@ function exportCsv() {
   document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
 
-  showGlobalSuccess("CSV export started.");
+  showGlobalSuccess(`CSV export started (${recordsToExport.length} records).`);
 }
 
 function openConfirm(title, text, action, confirmLabel = "Confirm") {
@@ -2421,10 +2523,10 @@ function closeProfileModal() {
 async function saveProfile() {
   if (!currentUser) return;
   
-  const profileName = (ui.profileName?.value || "").trim();
-  const profileEmail = (ui.profileEmail?.value || "").trim().toLowerCase();
-  const profilePhone = (ui.profilePhone?.value || "").trim();
-  const profileUnit = currentRole === "host" ? (ui.profileUnit?.value || "").trim() : "";
+  const profileName = formatNameWords(cleanTextInput(ui.profileName?.value || "", 80));
+  const profileEmail = normalizeEmail(ui.profileEmail?.value || "");
+  const profilePhone = cleanPhone(ui.profilePhone?.value || "");
+  const profileUnit = currentRole === "host" ? cleanTextInput(ui.profileUnit?.value || "", 20) : "";
   
   if (!profileName) {
     showProfileError("Full name is required.");
@@ -2441,12 +2543,12 @@ async function saveProfile() {
     return;
   }
 
-  if (!/^\S+@\S+\.\S+$/.test(profileEmail)) {
+  if (!isValidEmail(profileEmail)) {
     showProfileError("Please enter a valid email address.");
     return;
   }
 
-  if (profilePhone && !/^[0-9+\-\s()]{6,20}$/.test(profilePhone)) {
+  if (profilePhone && !isValidPhone(profilePhone)) {
     showProfileError("Phone format looks invalid.");
     return;
   }
@@ -2725,9 +2827,49 @@ function authErrorMessage(error) {
     return "This email is already registered. Please sign in instead.";
   }
   if (code === "auth/weak-password") {
-    return "Use a stronger password (at least 6 characters).";
+    return `Use a stronger password (at least ${MIN_PASSWORD_LENGTH} characters).`;
   }
   return "Login failed. Please try again.";
+}
+
+function cleanTextInput(value, maxLength = 120) {
+  return String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+function cleanPhone(value) {
+  return String(value || "")
+    .replace(/[^0-9+\-\s()]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 20);
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeVisitCode(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/[^A-Z0-9-]/g, "")
+    .slice(0, 20);
+}
+
+function isValidEmail(value) {
+  return /^\S+@\S+\.\S+$/.test(String(value || "").trim());
+}
+
+function isValidPhone(value) {
+  return PHONE_PATTERN.test(String(value || "").trim());
+}
+
+function isValidVisitCode(value) {
+  return VISIT_CODE_PATTERN.test(String(value || "").trim());
 }
 
 function normalizeVisitPurpose(value) {
@@ -2838,7 +2980,10 @@ function formatDateOnly(input) {
 }
 
 function csvEscape(value) {
-  const text = String(value ?? "");
+  let text = String(value ?? "");
+  if (/^[=+\-@]/.test(text)) {
+    text = `'${text}`;
+  }
   if (!text.includes(",") && !text.includes("\"") && !text.includes("\n")) return text;
   return `"${text.replace(/"/g, '""')}"`;
 }
@@ -3055,7 +3200,10 @@ function randomCode() {
 function toggle(element, visible) {
   if (!element) return;
   element.classList.toggle("hidden", !visible);
-  if (visible) observeRevealTargets(element);
+  if (visible) {
+    observeRevealTargets(element);
+    scheduleRevealFallback(element);
+  }
 }
 
 bootstrap();

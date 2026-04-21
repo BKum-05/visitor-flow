@@ -526,6 +526,12 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(15, 123, 255, 0.16);
 }
 
+input:invalid:not(:placeholder-shown),
+select:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+  border-color: var(--danger);
+}
+
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,

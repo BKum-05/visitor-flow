@@ -78,11 +78,11 @@
           <div class="input-grid two" id="hostForm">
             <div class="field-stack">
               <label class="field-label" for="hostVisitor">Visitor Name *</label>
-              <input id="hostVisitor" placeholder="Visitor name*" type="text" required />
+              <input id="hostVisitor" placeholder="Visitor name*" type="text" maxlength="80" autocomplete="name" required />
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostName">Unit Number *</label>
-              <input id="hostName" placeholder="Unit Number*" required />
+              <input id="hostName" placeholder="Unit Number*" maxlength="20" autocomplete="address-line2" required />
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostPurpose">Purpose *</label>
@@ -95,7 +95,7 @@
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostVehicle">Vehicle Number *</label>
-              <input id="hostVehicle" placeholder="Vehicle no*" required />
+              <input id="hostVehicle" placeholder="Vehicle no*" maxlength="14" autocapitalize="characters" spellcheck="false" required />
             </div>
             <div class="field-stack hidden" id="hostParkingNeedWrap">
               <label class="field-label" for="hostParkingNeeded">Need Parking Slot?</label>
@@ -115,11 +115,11 @@
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostId">ID Number</label>
-              <input id="hostId" placeholder="ID number" />
+              <input id="hostId" placeholder="ID number" maxlength="30" autocomplete="off" />
             </div>
             <div class="field-stack">
               <label class="field-label" for="hostPhone">Phone</label>
-              <input id="hostPhone" placeholder="Phone" type="tel" />
+              <input id="hostPhone" placeholder="Phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" />
             </div>
             <div class="field-stack" id="hostParkingSlotWrap">
               <label class="field-label" for="hostParkingSlot">Preferred Parking (Optional)</label>
@@ -181,10 +181,10 @@
               <option value="statusAZ">Status A-Z</option>
               <option value="parkingAZ">Parking 1-14</option>
             </select>
-            <input id="searchInput" placeholder="Search" />
+            <input id="searchInput" placeholder="Search visitor, host, code, vehicle" aria-label="Search logs" autocomplete="off" maxlength="80" />
             <button id="searchBtn" class="btn">Search</button>
           </div>
-          <p class="field-help">Showing 10 results per page.</p>
+          <p class="field-help">Showing 10 results per page. Tip: press Left/Right Arrow to change pages.</p>
           <div id="logsList" class="stack"></div>
           <div id="logsPagination" class="logs-pagination"></div>
         </article>
@@ -221,7 +221,7 @@
         </div>
         <div class="field-stack">
           <label class="field-label" for="profilePhone">Phone</label>
-          <input id="profilePhone" type="tel" placeholder="Example: 0123456789" autocomplete="tel" />
+          <input id="profilePhone" type="tel" placeholder="Example: 0123456789" autocomplete="tel" inputmode="tel" maxlength="20" />
         </div>
         <div class="field-stack" id="profileUnitWrap" style="display: none;">
           <label class="field-label" for="profileUnit">Unit Number *</label>

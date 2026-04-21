@@ -101,10 +101,10 @@
               <option value="statusAZ">Status A-Z</option>
               <option value="parkingAZ">Parking 1-14</option>
             </select>
-            <input id="searchInput" placeholder="Search" />
+            <input id="searchInput" placeholder="Search visitor, host, code, vehicle" aria-label="Search logs" autocomplete="off" maxlength="80" />
             <button id="searchBtn" class="btn">Search</button>
           </div>
-          <p class="field-help">Showing 10 records per page.</p>
+          <p class="field-help">Showing 10 records per page. Tip: press Left/Right Arrow to change pages.</p>
           <div id="logsList" class="stack"></div>
           <div id="logsPagination" class="logs-pagination"></div>
         </section>
@@ -118,17 +118,18 @@
           <p class="muted">Use pre-registration code or manual walk-in fallback.</p>
           <label class="field-label" for="preregCodeInput">Pre-Registration Code</label>
           <div class="row stretch">
-            <input id="preregCodeInput" placeholder="Pre-registration code" />
+            <input id="preregCodeInput" placeholder="Pre-registration code" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="20" pattern="[A-Za-z0-9-]{4,20}" />
             <button id="checkInByCodeBtn" class="btn" type="button">Check In</button>
           </div>
+          <p class="field-help">Code format: letters, numbers, or dashes only.</p>
           <div class="input-grid two" id="manualForm">
             <div class="field-stack">
               <label class="field-label" for="manualVisitor">Visitor Name *</label>
-              <input id="manualVisitor" placeholder="Visitor name*" required />
+              <input id="manualVisitor" placeholder="Visitor name*" maxlength="80" autocomplete="name" required />
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualHost">Unit Number *</label>
-              <input id="manualHost" placeholder="Unit Number*" required />
+              <input id="manualHost" placeholder="Unit Number*" maxlength="20" autocomplete="address-line2" required />
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualPurpose">Purpose *</label>
@@ -141,7 +142,7 @@
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualVehicle">Vehicle Number *</label>
-              <input id="manualVehicle" placeholder="Vehicle no*" required />
+              <input id="manualVehicle" placeholder="Vehicle no*" maxlength="14" autocapitalize="characters" spellcheck="false" required />
             </div>
             <div class="field-stack hidden" id="manualParkingNeedWrap">
               <label class="field-label" for="manualParkingNeeded">Need Parking Slot?</label>
@@ -153,11 +154,11 @@
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualId">ID Number</label>
-              <input id="manualId" placeholder="ID number" />
+              <input id="manualId" placeholder="ID number" maxlength="30" autocomplete="off" />
             </div>
             <div class="field-stack">
               <label class="field-label" for="manualPhone">Phone</label>
-              <input id="manualPhone" placeholder="Phone" type="tel" />
+              <input id="manualPhone" placeholder="Phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" />
             </div>
             <div class="field-stack" id="manualParkingSlotWrap">
               <label class="field-label" for="manualParkingSlot">Preferred Parking (Optional)</label>

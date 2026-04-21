@@ -32,22 +32,22 @@
         <h3>Visitor Form</h3>
         <p class="muted">Only essential details are required.</p>
 
-        <div id="globalError" class="banner error hidden"></div>
-        <div id="globalSuccess" class="banner success hidden"></div>
+        <div id="globalError" class="banner error hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
+        <div id="globalSuccess" class="banner success hidden" role="status" aria-live="polite" aria-atomic="true"></div>
 
         <form id="visitorRequestForm" class="input-grid two visitor-form-grid">
           <div class="field-stack host-invite-field" style="grid-column: 1 / -1;">
             <label class="field-label" for="visitorInviteCodeInput">Host Invitation Code</label>
-            <input id="visitorInviteCodeInput" placeholder="Enter host invitation code (optional)" />
+            <input id="visitorInviteCodeInput" placeholder="Enter host invitation code (optional)" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="20" pattern="[A-Za-z0-9-]{4,20}" />
             <p class="field-help">Received code from host? Enter it here first.</p>
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorNameInput">Visitor Name *</label>
-            <input id="visitorNameInput" placeholder="Full name*" required />
+            <input id="visitorNameInput" placeholder="Full name*" maxlength="80" autocomplete="name" required />
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorHostInput">Host / Unit *</label>
-            <input id="visitorHostInput" placeholder="Host name or unit*" required />
+            <input id="visitorHostInput" placeholder="Host name or unit*" maxlength="40" autocomplete="address-line2" required />
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorPurposeInput">Purpose *</label>
@@ -60,7 +60,7 @@
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorVehicleInput">Vehicle Number *</label>
-            <input id="visitorVehicleInput" placeholder="Vehicle plate*" required />
+            <input id="visitorVehicleInput" placeholder="Vehicle plate*" maxlength="14" autocapitalize="characters" spellcheck="false" required />
           </div>
           <div class="field-stack hidden" id="visitorParkingNeedWrap">
             <label class="field-label" for="visitorParkingNeeded">Need Parking Slot?</label>
@@ -80,11 +80,11 @@
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorIdInput">ID Number</label>
-            <input id="visitorIdInput" placeholder="ID / passport" />
+            <input id="visitorIdInput" placeholder="ID / passport" maxlength="30" autocomplete="off" />
           </div>
           <div class="field-stack">
             <label class="field-label" for="visitorPhoneInput">Phone</label>
-            <input id="visitorPhoneInput" type="tel" placeholder="Phone number" />
+            <input id="visitorPhoneInput" type="tel" placeholder="Phone number" autocomplete="tel" inputmode="tel" maxlength="20" />
           </div>
           <div class="field-stack" id="visitorParkingSlotWrap">
             <label class="field-label" for="visitorParkingSlot">Preferred Parking (Optional)</label>
