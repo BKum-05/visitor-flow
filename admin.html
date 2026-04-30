@@ -42,7 +42,7 @@
       <section class="hero-grid">
         <section class="hero-copy card">
           <span class="eyebrow">Administration</span>
-          <h2>Reports, summary, and record control</h2>
+          <h2>Monitor activity, approvals, and audit logs</h2>
           <div class="hero-kpis">
             <span>Operational summary</span>
             <span>Host activity insights</span>
@@ -51,8 +51,8 @@
         </section>
         <aside class="hero-panel">
           <section class="card hero-side-card">
-            <h3>Admin Controls</h3>
-            <p class="muted">Refresh live metrics and export complete CSV records.</p>
+            <h3>Operational Controls</h3>
+            <p class="muted">Refresh live metrics and export records for reporting or compliance review.</p>
             <div class="row hero-actions-row">
               <button id="refreshBtn" class="btn">Refresh</button>
               <button id="exportBtn" class="btn btn-primary">Export CSV</button>
@@ -166,7 +166,7 @@
                 <option value="">Auto assign</option>
                 <option value="" disabled>Loading slots from Firebase...</option>
               </select>
-              <p class="field-help">Preferred slot is attempted first, <br>otherwise auto-assigned if unavailable.</p>
+              <p class="field-help">Preferred slot is tried first. If unavailable, the next open slot is assigned automatically.</p>
             </div>
           </div>
           <button id="manualCheckInBtn" class="btn btn-primary" type="button">Manual Check-In</button>

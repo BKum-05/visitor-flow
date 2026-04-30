@@ -282,13 +282,15 @@ function setupAuthListener() {
     currentUser = user;
     try {
       const role = await loadUserRole(user.uid);
-      currentRole = role || selectedRole;
-
-      if (!currentRole || !roleRoutes[currentRole]) {
+      if (!role) {
         setTransientMessage("Unauthorized: no valid role is assigned to this account.");
         await signOut(auth);
         return;
       }
+
+      currentRole = role;
+      selectedRole = role;
+      sessionStorage.setItem(selectedRoleKey, selectedRole);
 
       const targetPage = roleRoutes[currentRole];
       if (currentPage !== "home" && !canAccessPage(currentRole, currentPage)) {
@@ -926,36 +928,40 @@ async function refreshData() {
   await loadParkingSlots();
   renderParkingSelectOptions();
   syncAllPurposeParkingUi();
-  
-  try {
-    await loadVisitorRequests();
-  } catch (error) {
+
+  const loadVisitorRequestsTask = loadVisitorRequests().catch((error) => {
     console.warn("Could not load visitor requests:", error);
+  });
+  let preregistrationsLoaded = false;
+  const loadPreregistrationsTask = loadPreregistrations()
+    .then(() => {
+      preregistrationsLoaded = true;
+    })
+    .catch((error) => {
+      console.warn("Could not load preregistrations:", error);
+    });
+
+  await Promise.all([loadVisitorRequestsTask, loadPreregistrationsTask]);
+
+  if (preregistrationsLoaded) {
+    try {
+      await reconcileCheckedInPreregToLogs();
+    } catch (error) {
+      console.warn("Could not reconcile preregistrations:", error);
+    }
   }
-  
-  try {
-    await loadPreregistrations();
-  } catch (error) {
-    console.warn("Could not load preregistrations:", error);
-  }
-  
-  try {
-    await reconcileCheckedInPreregToLogs();
-  } catch (error) {
-    console.warn("Could not reconcile preregistrations:", error);
-  }
-  
-  try {
-    await loadLogs();
-  } catch (error) {
+
+  const loadLogsTask = loadLogs().catch((error) => {
     console.warn("Could not load logs:", error);
-  }
-  
-  try {
-    await loadPendingRequests();
-  } catch (error) {
+  });
+  const loadPendingRequestsTask = loadPendingRequests().catch((error) => {
     console.warn("Could not load pending requests:", error);
-  }
+  });
+  const loadCurrentVisitorsTask = loadCurrentVisitors().catch((error) => {
+    console.warn("Could not load current visitors:", error);
+  });
+
+  await Promise.all([loadLogsTask, loadPendingRequestsTask, loadCurrentVisitorsTask]);
   
   derivePreregStats();
   renderParkingAdminList();
@@ -963,12 +969,6 @@ async function refreshData() {
   renderLogs(filteredLogs());
   renderPendingRequests();
   renderAdminInsights();
-  
-  try {
-    await loadCurrentVisitors();
-  } catch (error) {
-    console.warn("Could not load current visitors:", error);
-  }
 }
 
 async function refreshParkingUiOnly() {
@@ -1142,18 +1142,26 @@ async function resolveHostOwnerUidByUnit(unitOrHostName) {
 
   // Try host collection first
   const hostSnapshot = await getDocs(
-    query(collection(db, "host"), where("unitNumber", "==", unit), limit(1))
+    query(collection(db, "host"), where("unitNumber", "==", unit))
   );
   if (hostSnapshot.docs.length > 0) {
-    return hostSnapshot.docs[0].id;
+    const [hostDoc] = [...hostSnapshot.docs].sort((a, b) => {
+      const createdDiff = (toDate(b.data()?.createdAt)?.getTime() || 0) - (toDate(a.data()?.createdAt)?.getTime() || 0);
+      return createdDiff || a.id.localeCompare(b.id);
+    });
+    return hostDoc?.id || "";
   }
 
   // Fall back to users collection
   const usersSnapshot = await getDocs(
-    query(collection(db, "users"), where("unitNumber", "==", unit), limit(1))
+    query(collection(db, "users"), where("unitNumber", "==", unit))
   );
   if (usersSnapshot.docs.length > 0) {
-    return usersSnapshot.docs[0].id;
+    const [userDoc] = [...usersSnapshot.docs].sort((a, b) => {
+      const createdDiff = (toDate(b.data()?.createdAt)?.getTime() || 0) - (toDate(a.data()?.createdAt)?.getTime() || 0);
+      return createdDiff || a.id.localeCompare(b.id);
+    });
+    return userDoc?.id || "";
   }
 
   return "";
@@ -2698,7 +2706,7 @@ async function loadUserRole(uid) {
   const usersSnapshot = await getDoc(doc(db, "users", uid));
   if (usersSnapshot.exists()) {
     const role = String(usersSnapshot.data().role || "").toLowerCase();
-    if (role) return role;
+    if (roleRoutes[role]) return role;
   }
 
   // Compatibility mode: some projects store staff in separate collections.
@@ -2879,8 +2887,7 @@ function normalizeVisitPurpose(value) {
 }
 
 function shouldRequestParking(purpose, parkingNeeded) {
-  if (purpose === "guest") return true;
-  return parkingNeeded === "yes";
+  return purpose === "guest" || parkingNeeded === "yes";
 }
 
 function showLatestPreregCode(visitCode) {
